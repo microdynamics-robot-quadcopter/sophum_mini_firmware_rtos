@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "driver/i2c.h"
-#include "esp32_module_mpu9250.h"
+#include "sophum_module_mpu9250.h"
 
 
 #define I2C_EXAMPLE_MASTER_NUM I2C_NUM_1  /*!< I2C port number for master dev */

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "driver/i2c.h"
-#include "esp32_driver_i2c.h"
+#include "sophum_driver_i2c.h"
 
 bool I2C_writeOneByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t data)
 {

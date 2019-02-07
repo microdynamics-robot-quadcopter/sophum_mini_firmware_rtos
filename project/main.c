@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "driver/i2c.h"
-#include "esp32_module_mpu9250.h"
+#include "sophum_module_mpu9250.h"
 
 /**
  * TEST CODE BRIEF
@@ -374,7 +374,7 @@ void app_main()
     {
         printf("C[%d]:%u\n", i, calibration_params[i]);
     }
-    // MS5611_UpdateData();
+    MS5611_UpdateData();
     // MPU9250_getID();
 }
 

@@ -1,1 +1,6 @@
-/build
+#IDE config
+.vscode/
+
+
+#
+./build/

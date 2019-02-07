@@ -15,3 +15,13 @@ EXTRA_COMPONENT_DIRS += $(PROJECT_PATH)/modules/sophum_module_mpu9250
 
 include $(IDF_PATH)/make/project.mk
 
+COMPONENT_INCLUDES += $(PROJECT_PATH)/project
+COMPONENT_INCLUDES += $(PROJECT_PATH)/drivers/sophum_driver_i2c
+COMPONENT_INCLUDES += $(PROJECT_PATH)/drivers/sophum_driver_spi
+COMPONENT_INCLUDES += $(PROJECT_PATH)/modules/sophum_module_vl53l1x
+COMPONENT_INCLUDES += $(PROJECT_PATH)/modules/sophum_module_pmw3901
+COMPONENT_INCLUDES += $(PROJECT_PATH)/modules/sophum_module_ms5611
+COMPONENT_INCLUDES += $(PROJECT_PATH)/modules/sophum_module_mpu9250
+
+
+

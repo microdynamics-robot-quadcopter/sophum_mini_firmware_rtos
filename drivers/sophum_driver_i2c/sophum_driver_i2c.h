@@ -35,7 +35,7 @@ extern bool I2C_writeMultiBytes(uint8_t dev_addr, uint8_t reg_addr, uint16_t byt
 extern bool I2C_writeOneBit(uint8_t dev_addr, uint8_t reg_addr, uint8_t bit_id, uint8_t data);
 
 /**
- * Write up to 8 bits to an I2C peripheral
+ * Write up to 8 bits to an I2C peripheral(note: start bit is MSB)
  * @param dev_addr : The device address to write to
  * @param reg_addr : The internal address to write to, I2CDEV_NO_MEM_ADDR if none
  * @param bit_start: The bit to start from(0 - 7)
@@ -79,7 +79,7 @@ extern bool I2C_readMultiBytes(uint8_t dev_addr, uint8_t reg_addr, uint16_t byte
 extern bool I2C_readOneBit(uint8_t dev_addr, uint8_t reg_addr, uint8_t bit_id, uint8_t* data);
 
 /**
- * Read up to 8 bits from an I2C peripheral
+ * Read up to 8 bits from an I2C peripheral(note: start bit is MSB)
  * @param dev_addr : The device address to read from
  * @param reg_addr : The internal address to read from, I2CDEV_NO_MEM_ADDR if none
  * @param bit_start: The bit to start from(0 - 7)

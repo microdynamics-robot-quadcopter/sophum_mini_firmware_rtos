@@ -30,13 +30,21 @@ bool I2C_MasterInit(uint8_t i2c_port, uint8_t scl_pin, uint8_t sda_pin, uint32_t
 
     if(ret != ESP_OK)
     {
-        printf("%u I2c port master init ERROR!!!\n", i2c_port);
+        printf("I2c port %u master mode init ERROR!!!\n", i2c_port);
         return false;
     }
     else
     {
+        printf("I2C port %u master mode init SUCCESS!!!\n", i2c_port);
         return true;
     }
+}
+
+
+bool I2C_writeZeroByte(uint8_t i2c_port, uint8_t dev_addr, uint8_t reg_addr)
+{
+    uint8_t tmp_data;
+    return I2C_writeMultiBytes(i2c_port, dev_addr, reg_addr, 0, &tmp_data);
 }
 
 
@@ -54,7 +62,11 @@ bool I2C_writeMultiBytes(uint8_t i2c_port, uint8_t dev_addr, uint8_t reg_addr, u
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, dev_addr, MASTER_EN_CHECK_ACK);
     i2c_master_write_byte(cmd, reg_addr, MASTER_EN_CHECK_ACK);
-    i2c_master_write(cmd, data, byte_num, MASTER_EN_CHECK_ACK);
+    if(byte_num != 0)
+    {
+        i2c_master_write(cmd, data, byte_num, MASTER_EN_CHECK_ACK);
+    }
+
     i2c_master_stop(cmd);
     ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);

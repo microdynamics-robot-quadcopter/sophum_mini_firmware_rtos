@@ -46,7 +46,8 @@
 #define NACK_VAL                           0x1              /*!< I2C nack value */
 
 
-extern uint16_t calibration_params[MS5611_PROM_REG_COUNT+1];
+/* public variable */
+extern uint16_t calibration_params[MS5611_PROM_REG_COUNT+2];
 
 /* public operation */
 extern void MS5611_Init(void);

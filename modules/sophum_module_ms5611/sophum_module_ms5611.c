@@ -1,18 +1,14 @@
 #include <stdio.h>
 #include <math.h>
 #include "driver/i2c.h"
+#include "sophum_driver_i2c.h"
 #include "sophum_module_ms5611.h"
 
 
 volatile float g_ms5611_altitude    = 0;
 volatile float g_ms5611_pressure    = 0;
 volatile float g_ms5611_temperature = 0;
-uint16_t calibration_params[MS5611_PROM_REG_COUNT+1];
-
-/* FIFO queue */
-// static float temperature_buffer[MS5611_BUFFER_SIZE];
-// static float pressure_buffer[MS5611_BUFFER_SIZE];
-// static float altitude_buffer[MS5611_BUFFER_SIZE];
+uint16_t calibration_params[MS5611_PROM_REG_COUNT+2];
 
 
 /* private variable */
@@ -21,6 +17,10 @@ static float    g_pressure_offset      = 0; /* save the pressure of 0m(relative)
 static uint16_t g_pressure_offset_cnt  = 0;
 static double   g_pressure_offset_val  = 0.0F;
        bool     g_pressure_offset_flag = false;
+/* FIFO queue */
+// static float temperature_buffer[MS5611_BUFFER_SIZE];
+// static float pressure_buffer[MS5611_BUFFER_SIZE];
+// static float altitude_buffer[MS5611_BUFFER_SIZE];
 
 /* private operation */
 static void MS5611_Reset(void);
@@ -28,8 +28,6 @@ static void MS5611_ReadPROM(void);
 static uint32_t MS5611_GetConversion(uint8_t command);
 static void MS5611_CalcTempAndPres(void);
 static void MS5611_CalcAltitude(void);
-
-
 
 
 /**
@@ -48,16 +46,9 @@ static void MS5611_CalcAltitude(void);
 
 static void MS5611_Reset(void)
 {
-    int ret;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, MS5611_ADDR, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, MS5611_RESET, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
+    bool ret = I2C_writeZeroByte(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR, MS5611_RESET);
 
-    if(ret != ESP_OK)
+    if(ret == false)
     {
         printf("MS5611 reset ERROR!!!\n");
     }
@@ -70,28 +61,19 @@ static void MS5611_Reset(void)
 
 static void MS5611_ReadPROM(void)
 {
-    uint8_t data_l;
-    uint8_t data_h;
+    uint8_t tmp_data[2];
+    bool ret;
 
     for(int i = 1; i <= MS5611_PROM_REG_COUNT; i++)
     {
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, MS5611_ADDR, ACK_CHECK_EN);
-        i2c_master_write_byte(cmd, MS5611_PROM_BASE_ADDR + (i * MS5611_PROM_REG_SIZE), ACK_CHECK_EN);
-        i2c_master_stop(cmd);
-        i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-        vTaskDelay(1 / portTICK_RATE_MS);
-
-        cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, MS5611_ADDR + 1, ACK_CHECK_EN);
-        i2c_master_read_byte(cmd, &data_h, ACK_VAL);
-        i2c_master_read_byte(cmd, &data_l, NACK_VAL);
-        i2c_master_stop(cmd);
-        i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-        i2c_cmd_link_delete(cmd);
-        calibration_params[i] = (((uint16_t)data_h << 8) | data_l);
+        ret = I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR,
+                                 MS5611_PROM_BASE_ADDR + (i * MS5611_PROM_REG_SIZE),
+                                 2, tmp_data);
+        if(ret == false)
+        {
+            printf("Read MS511 PROM params[%d] is ERROR!!!\n", i);
+        }
+        calibration_params[i] = (((uint16_t)tmp_data[0] << 8) | tmp_data[1]);
     }
 
 }
@@ -105,18 +87,12 @@ void MS5611_Init(void)
 
 static uint32_t MS5611_GetConversion(uint8_t command)
 {
-    int ret;
+    bool ret;
     uint8_t conver_res[MS5611_D1D2_SIZE];
 
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, MS5611_ADDR, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, command, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
+    ret = I2C_writeZeroByte(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR, command);
 
-    if(ret != ESP_OK)
+    if(ret == false)
     {
         printf("MS5611 D1D2 config ERROR!!!\n");
     }
@@ -131,35 +107,9 @@ static uint32_t MS5611_GetConversion(uint8_t command)
     
     vTaskDelay(20 / portTICK_RATE_MS);
 
-    cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, MS5611_ADDR, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, MS5611_ADC_READ, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    if(ret != ESP_OK)
-    {
-        printf("MS5611 ADC config ERROR!!!\n");
-    }
-    else
-    {
-        // printf("start adc read...\n");
-    }
-    
+    ret = I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR, MS5611_ADC_READ, 3, conver_res);
 
-    cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, MS5611_ADDR + 1, ACK_CHECK_EN);
-
-    i2c_master_read_byte(cmd, conver_res, ACK_VAL);
-    i2c_master_read_byte(cmd, conver_res + 1, ACK_VAL);
-    i2c_master_read_byte(cmd, conver_res + 2, NACK_VAL);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-
-    if(ret != ESP_OK)
+    if(ret == false)
     {
         printf("MS5611 conver ERROR!!!\n");
     }

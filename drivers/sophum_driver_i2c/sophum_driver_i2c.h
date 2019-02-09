@@ -35,6 +35,17 @@ extern bool I2C_MasterInit(uint8_t i2c_port, uint8_t scl_pin,
                            uint8_t sda_pin, uint32_t clk_frq);
 
 /**
+ * write only register address to an I2C peripheral(note: such as reset operation)
+ * @param i2c_port: the I2C port number(I2C_NUM_0 or I2C_NUM_1)
+ * @param dev_addr: the device address to write to
+ * @param reg_addr: the internal address to write from, I2CDEV_NO_MEM_ADDR if none
+ *
+ * @return TRUE if write was successful, otherwise FALSE
+ */
+extern bool I2C_writeZeroByte(uint8_t i2c_port, uint8_t dev_addr,
+                              uint8_t reg_addr);
+
+/**
  * write one byte to an I2C peripheral
  * @param i2c_port: the I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: the device address to write to

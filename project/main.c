@@ -35,8 +35,6 @@ void app_main()
     I2C_MasterInit(I2C_NUM1_MASTER_PORT_GPIO, I2C_NUM1_MASTER_SCL_GPIO, I2C_NUM1_MASTER_SDA_GPIO,
                    I2C_NUM1_MASTER_FREQ_HZ);
 
-    printf("i2c config init success!!!\n");
-
     MS5611_Init();
     for (int i = 1; i <= MS5611_PROM_REG_COUNT; i++)
     {

@@ -40,7 +40,7 @@ void app_main()
     {
         printf("C[%d]:%u\n", i, calibration_params[i]);
     }
-    MS5611_UpdateData();
-    // MPU9250_getID();
+    // MS5611_UpdateData();
+    MPU9250_Init();
 }
 

@@ -268,35 +268,6 @@ static void     MPU9250_setFIFOByte(uint8_t data);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * get MPU9250 device ID
  * @return TRUE if operation was successful, otherwise FALSE
@@ -378,16 +349,42 @@ static bool MPU9250_getSelfTest(void)
         aver_gyro_data[i] /= 200;
     }
 
+    /* configure the acce and gyro for self-test */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 0xE0); /* enable self test on all three axes and set acce range to +/- 2g */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 0xE0);  /* enable self test on all three axes and set gyro range to +/- 250dps */
+    vTaskDelay(25); /* delay a while to let the device stabilize */
+
+    for(int i = 1; i <= 200; i++)
+    {
+        I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_XOUT_H, 6, raw_data);
+        aver_acce_selftest_data[0] += (int16_t)(((int16_t)raw_data[0] << 8) | raw_data[1]);
+        aver_acce_selftest_data[1] += (int16_t)(((int16_t)raw_data[2] << 8) | raw_data[3]);
+        aver_acce_selftest_data[2] += (int16_t)(((int16_t)raw_data[4] << 8) | raw_data[5]);
+
+        I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_XOUT_H, 6, raw_data);
+        aver_gyro_selftest_data[0] += (int16_t)(((int16_t)raw_data[0] << 8) | raw_data[1]);
+        aver_gyro_selftest_data[1] += (int16_t)(((int16_t)raw_data[2] << 8) | raw_data[3]);
+        aver_gyro_selftest_data[2] += (int16_t)(((int16_t)raw_data[4] << 8) | raw_data[5]);
+    }
+
+    for(int i = 0; i < 3; i++)
+    {
+        aver_acce_selftest_data[i] /= 200;
+        aver_gyro_selftest_data[i] /= 200;
+    }
+
+    /* configure the gyro and accelerometer for normal operation */
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 0x00);
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 0x00);
     vTaskDelay(25); /* delay a while to let the device stabilize */
 
+    /* retrieve acce and gyro factory Self-Test Code from USR_Reg */
     I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_X_ACCEL, selftest_data);
     I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Y_ACCEL, selftest_data + 1);
     I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Z_ACCEL, selftest_data + 2);
-    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_X_GYRO, selftest_data  + 3);
-    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Y_GYRO, selftest_data  + 4);
-    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Z_GYRO, selftest_data  + 5);
+    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_X_GYRO,  selftest_data + 3);
+    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Y_GYRO,  selftest_data + 4);
+    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_Z_GYRO,  selftest_data + 5);
 
     for(int i = 0; i < 6; i++)
     {
@@ -401,6 +398,8 @@ static bool MPU9250_getSelfTest(void)
         }
     }
 
+    /* report results as a ratio of (STR - FT)/FT; the change from Factory Trim of the Self-Test Response */
+    /* to get percent, must multiply by 100 */
     for(int i = 0; i < 3; i++)
     {
         acce_diff[i] = 100.0F * ((float)((aver_acce_selftest_data[i] - aver_acce_data[i]) - factory_trim[i])) / factory_trim[i];
@@ -480,5 +479,13 @@ static uint8_t MPU9250_getSampleRate(void)
 
 void MPU9250_Init(void)
 {
-    MPU9250_getSelfTest();
+    if(MPU9250_testConnection() == true)
+    {
+        printf("test connection SUCCESS!!!\n");
+    }
+
+    if(MPU9250_getSelfTest() == true)
+    {
+        printf("self test SUCCESS!!!\n");
+    }
 }

@@ -138,7 +138,7 @@
 #define MPU9250_CFG_DLPF_BW_5                       0x06
 
 /* GYRO_CONFIG register(0x1B) bit */
-#define MPU9250_GYROCFG_XG_SELF_TSET_EN_BIT         7
+#define MPU9250_GYROCFG_XG_SELF_TEST_EN_BIT         7
 #define MPU9250_GYROCFG_YG_SELF_TEST_EN_BIT         6
 #define MPU9250_GYROCFG_ZG_SELF_TEST_EN_BIT         5
 #define MPU9250_GYROCFG_FS_SEL_BIT                  4

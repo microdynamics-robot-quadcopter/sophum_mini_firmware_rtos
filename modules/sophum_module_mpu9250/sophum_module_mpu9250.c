@@ -5,7 +5,7 @@
 
 
 
-/* private variable */
+/* private const variable */
 static const uint16_t mpu9250_selftest_table[256] = {
   2620,2646,2672,2699,2726,2753,2781,2808, //7
   2837,2865,2894,2923,2952,2981,3011,3041, //15
@@ -44,10 +44,258 @@ static const uint16_t mpu9250_selftest_table[256] = {
 
 /* private operation */
 static uint8_t MPU9250_getID(void);
-static bool MPU9250_testConnection(void);
-static bool MPU9250_getSelfTest(void);
-static bool MPU9250_evaluateSelfTest(float low, float high, float value, char* string);
+static bool    MPU9250_testConnection(void);
+
+static bool    MPU9250_getSelfTest(void);
+static bool    MPU9250_evaluateSelfTest(float low, float high, float value, char* string);
+
 static uint8_t MPU9250_getSampleRate(void);
+static void    MPU9250_setSampleRate(uint8_t rate);
+
+static uint8_t MPU9250_getExternalFrameSync(void);
+static void    MPU9250_setExternalFrameSync(uint8_t sync);
+
+static uint8_t MPU9250_getDLPFMode(void);
+static void    MPU9250_setDLPFMode(uint8_t mode);
+
+static uint8_t MPU9250_getFullScaleGyroRangeId(void);
+static float   MPU9250_getFullScaleGyroDPL(void);
+static void    MPU9250_setFullScaleGyroRange(uint8_t range);
+
+static void    MPU9250_setGyroXSelfTest(bool enabled);
+static void    MPU9250_setGyroYSelfTest(bool enabled);
+static void    MPU9250_setGyroZSelfTest(bool enabled);
+
+static bool    MPU9250_getAccelXSelfTest(void);
+static void    MPU9250_setAccelXSelfTest(bool enabled);
+static bool    MPU9250_getAccelYSelfTest(void);
+static void    MPU9250_setAccelYSelfTest(bool enabled);
+static bool    MPU9250_getAccelZSelfTest(void);
+static void    MPU9250_setAccelZSelfTest(bool enabled);
+
+static uint8_t MPU9250_getFullScaleAccelRangeId(void);
+static float   MPU9250_getFullScaleAccelGPL(void);
+static void    MPU9250_setFullScaleAccelRange(uint8_t range);
+
+static void    MPU9250_setAccelDLPF(uint8_t range);
+static uint8_t MPU9250_getDHPFMode(void);
+static void    MPU9250_setDHPFMode(uint8_t bandwidth);
+
+static bool    MPU9250_getTempFIFOEnabled(void);
+static void    MPU9250_setTempFIFOEnabled(bool enabled);
+static bool    MPU9250_getXGyroFIFOEnabled(void);
+static void    MPU9250_setXGyroFIFOEnabled(bool enabled);
+static bool    MPU9250_getYGyroFIFOEnabled(void);
+static void    MPU9250_setYGyroFIFOEnabled(bool enabled);
+static bool    MPU9250_getZGyroFIFOEnabled(void);
+static void    MPU9250_setZGyroFIFOEnabled(bool enabled);
+static bool    MPU9250_getAccelFIFOEnabled(void);
+static void    MPU9250_setAccelFIFOEnabled(bool enabled);
+static bool    MPU9250_getSlave2FIFOEnabled(void);
+static void    MPU9250_setSlave2FIFOEnabled(bool enabled);
+static bool    MPU9250_getSlave1FIFOEnabled(void);
+static void    MPU9250_setSlave1FIFOEnabled(bool enabled);
+static bool    MPU9250_getSlave0FIFOEnabled(void);
+static void    MPU9250_setSlave0FIFOEnabled(bool enabled);
+
+static bool    MPU9250_getMultiMasterEnabled(void);
+static void    MPU9250_setMultiMasterEnabled(bool enabled);
+static bool    MPU9250_getWaitForExternalSensorEnabled(void);
+static void    MPU9250_setWaitForExternalSensorEnabled(bool enabled);
+static bool    MPU9250_getSlave3FIFOEnabled(void);
+static void    MPU9250_setSlave3FIFOEnabled(bool enabled);
+static bool    MPU9250_getSlaveReadWriteTransitionEnabled(void);
+static void    MPU9250_setSlaveReadWriteTransitionEnabled(bool enabled);
+static uint8_t MPU9250_getMasterClockSpeed(void);
+static void    MPU9250_setMasterClockSpeed(uint8_t speed);
+
+static uint8_t MPU9250_getSlaveAddress(uint8_t num);
+static void    MPU9250_setSlaveAddress(uint8_t num, uint8_t address);
+static uint8_t MPU9250_getSlaveRegister(uint8_t num);
+static void    MPU9250_setSlaveRegister(uint8_t num, uint8_t reg);
+static bool    MPU9250_getSlaveEnabled(uint8_t num);
+static void    MPU9250_setSlaveEnabled(uint8_t num, bool enabled);
+static bool    MPU9250_getSlaveWordByteSwap(uint8_t num);
+static void    MPU9250_setSlaveWordByteSwap(uint8_t num, bool enabled);
+static bool    MPU9250_getSlaveWriteMode(uint8_t num);
+static void    MPU9250_setSlaveWriteMode(uint8_t num, bool mode);
+static bool    MPU9250_getSlaveWordGroupOffset(uint8_t num);
+static void    MPU9250_setSlaveWordGroupOffset(uint8_t num, bool enabled);
+static uint8_t MPU9250_getSlaveDataLength(uint8_t num);
+static void    MPU9250_setSlaveDataLength(uint8_t num, uint8_t length);
+
+static uint8_t MPU9250_getSlave4Address(void);
+static void    MPU9250_setSlave4Address(uint8_t address);
+static uint8_t MPU9250_getSlave4Register(void);
+static void    MPU9250_setSlave4Register(uint8_t reg);
+static void    MPU9250_setSlave4OutputByte(uint8_t data);
+static bool    MPU9250_getSlave4Enabled(void);
+static void    MPU9250_setSlave4Enabled(bool enabled);
+static bool    MPU9250_getSlave4InterruptEnabled(void);
+static void    MPU9250_setSlave4InterruptEnabled(bool enabled);
+static bool    MPU9250_getSlave4WriteMode(void);
+static void    MPU9250_setSlave4WriteMode(bool mode);
+static uint8_t MPU9250_getSlave4MasterDelay(void);
+static void    MPU9250_setSlave4MasterDelay(uint8_t delay);
+static uint8_t MPU9250_getSlate4InputByte(void);
+
+static bool    MPU9250_getPassthroughStatus(void);
+static bool    MPU9250_getSlave4IsDone(void);
+static bool    MPU9250_getLostArbitration(void);
+static bool    MPU9250_getSlave4Nack(void);
+static bool    MPU9250_getSlave3Nack(void);
+static bool    MPU9250_getSlave2Nack(void);
+static bool    MPU9250_getSlave1Nack(void);
+static bool    MPU9250_getSlave0Nack(void);
+
+static bool    MPU9250_getInterruptMode(void);
+static void    MPU9250_setInterruptMode(bool mode);
+static bool    MPU9250_getInterruptDrive(void);
+static void    MPU9250_setInterruptDrive(bool drive);
+static bool    MPU9250_getInterruptLatch(void);
+static void    MPU9250_setInterruptLatch(bool latch);
+static bool    MPU9250_getInterruptLatchClear(void);
+static void    MPU9250_setInterruptLatchClear(bool clear);
+static bool    MPU9250_getFSyncInterruptLevel(void);
+static void    MPU9250_setFSyncInterruptLevel(bool level);
+static bool    MPU9250_getFSyncInterruptEnabled(void);
+static void    MPU9250_setFSyncInterruptEnabled(bool enabled);
+static bool    MPU9250_getI2CBypassEnabled(void);
+static void    MPU9250_setI2CBypassEnabled(bool enabled);
+static bool    MPU9250_getClockOutputEnabled(void);
+static void    MPU9250_setClockOutputEnabled(bool enabled);
+
+static uint8_t MPU9250_getIntEnabled(void);
+static void    MPU9250_setIntEnabled(uint8_t enabled);
+static bool    MPU9250_getIntFreefallEnabled(void);
+static void    MPU9250_setIntFreefallEnabled(bool enabled);
+static bool    MPU9250_getIntMotionEnabled(void);
+static void    MPU9250_setIntMotionEnabled(bool enabled);
+static bool    MPU9250_getIntZeroMotionEnabled(void);
+static void    MPU9250_setIntZeroMotionEnabled(bool enabled);
+static bool    MPU9250_getIntFIFOBufferOverflowEnabled(void);
+static void    MPU9250_setIntFIFOBufferOverflowEnabled(bool enabled);
+static bool    MPU9250_getIntI2CMasterEnabled(void);
+static void    MPU9250_setIntI2CMasterEnabled(bool enabled);
+static bool    MPU9250_getIntDataReadyEnabled(void);
+static void    MPU9250_setIntDataReadyEnabled(bool enabled);
+
+static uint8_t MPU9250_getIntStatus(void);
+static bool    MPU9250_getIntFreefallStatus(void);
+static bool    MPU9250_getIntMotionStatus(void);
+static bool    MPU9250_getIntZeroMotionStatus(void);
+static bool    MPU9250_getIntFIFOBufferOverflowStatus(void);
+static bool    MPU9250_getIntI2CMasterStatus(void);
+static bool    MPU9250_getIntDataReadyStatus(void);
+
+static void    MPU9250_getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
+static void    MPU9250_getAcceleration(int16_t* x, int16_t* y, int16_t* z);
+static int16_t MPU9250_getAccelerationX(void);
+static int16_t MPU9250_getAccelerationY(void);
+static int16_t MPU9250_getAccelerationZ(void);
+static int16_t MPU9250_getTemperature(void);
+static void    MPU9250_getRotation(int16_t* x, int16_t* y, int16_t* z);
+static int16_t MPU9250_getRotationX(void);
+static int16_t MPU9250_getRotationY(void);
+static int16_t MPU9250_getRotationZ(void);
+static uint8_t MPU9250_getExternalSensorByte(int position);
+static uint16_t MPU9250_getExternalSensorWord(int position);
+static uint32_t MPU9250_getExternalSensorDWord(int position);
+
+static bool    MPU9250_getXNegMotionDetected(void);
+static bool    MPU9250_getXPosMotionDetected(void);
+static bool    MPU9250_getYNegMotionDetected(void);
+static bool    MPU9250_getYPosMotionDetected(void);
+static bool    MPU9250_getZNegMotionDetected(void);
+static bool    MPU9250_getZPosMotionDetected(void);
+static bool    MPU9250_getZeroMotionDetected(void);
+
+static void    MPU9250_setSlaveOutputByte(uint8_t num, uint8_t data);
+
+static bool    MPU9250_getExternalShadowDelayEnabled(void);
+static void    MPU9250_setExternalShadowDelayEnabled(bool enabled);
+static bool    MPU9250_getSlaveDelayEnabled(uint8_t num);
+static void    MPU9250_setSlaveDelayEnabled(uint8_t num, bool enabled);
+
+static void    MPU9250_resetGyroscopePath(void);
+static void    MPU9250_resetAccelerometerPath(void);
+static void    MPU9250_resetTemperaturePath(void);
+
+static uint8_t MPU9250_getAccelerometerPowerOnDelay(void);
+static void    MPU9250_setAccelerometerPowerOnDelay(uint8_t delay);
+static uint8_t MPU9250_getFreefallDetectionCounterDecrement(void);
+static void    MPU9250_setFreefallDetectionCounterDecrement(uint8_t decrement);
+static uint8_t MPU9250_getMotionDetectionCounterDecrement(void);
+static void    MPU9250_setMotionDetectionCounterDecrement(uint8_t decrement);
+
+static bool    MPU9250_getFIFOEnabled(void);
+static void    MPU9250_setFIFOEnabled(bool enabled);
+static bool    MPU9250_getI2CMasterModeEnabled(void);
+static void    MPU9250_setI2CMasterModeEnabled(bool enabled);
+static void    MPU9250_switchSPIEnabled(bool enabled);
+static void    MPU9250_resetFIFO(void);
+static void    MPU9250_resetI2CMaster(void);
+static void    MPU9250_resetSensors(void);
+
+static void    MPU9250_reset(void);
+static bool    MPU9250_getSleepEnabled(void);
+static void    MPU9250_setSleepEnabled(bool enabled);
+static bool    MPU9250_getWakeCycleEnabled(void);
+static void    MPU9250_setWakeCycleEnabled(bool enabled);
+static bool    MPU9250_getTempSensorEnabled(void);
+static void    MPU9250_setTempSensorEnabled(bool enabled);
+static uint8_t MPU9250_getClockSource(void);
+static void    MPU9250_setClockSource(uint8_t source);
+
+static uint8_t MPU9250_getWakeFrequency(void);
+static void    MPU9250_setWakeFrequency(uint8_t frequency);
+static bool    MPU9250_getStandbyXAccelEnabled(void);
+static void    MPU9250_setStandbyXAccelEnabled(bool enabled);
+static bool    MPU9250_getStandbyYAccelEnabled(void);
+static void    MPU9250_setStandbyYAccelEnabled(bool enabled);
+static bool    MPU9250_getStandbyZAccelEnabled(void);
+static void    MPU9250_setStandbyZAccelEnabled(bool enabled);
+static bool    MPU9250_getStandbyXGyroEnabled(void);
+static void    MPU9250_setStandbyXGyroEnabled(bool enabled);
+static bool    MPU9250_getStandbyYGyroEnabled(void);
+static void    MPU9250_setStandbyYGyroEnabled(bool enabled);
+static bool    MPU9250_getStandbyZGyroEnabled(void);
+static void    MPU9250_setStandbyZGyroEnabled(bool enabled);
+
+static uint16_t MPU9250_getFIFOCount(void);
+static uint8_t  MPU9250_getFIFOByte(void);
+static void     MPU9250_setFIFOByte(uint8_t data);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * get MPU9250 device ID
@@ -171,7 +419,7 @@ static bool MPU9250_getSelfTest(void)
        MPU9250_evaluateSelfTest(MPU9250_SELF_TEST_GYRO_LOW, MPU9250_SELF_TEST_GYRO_HIGH, gyro_diff[2], "gyro z") &&
        MPU9250_evaluateSelfTest(MPU9250_SELF_TEST_ACCE_LOW, MPU9250_SELF_TEST_ACCE_HIGH, acce_diff[0], "acce x") &&
        MPU9250_evaluateSelfTest(MPU9250_SELF_TEST_ACCE_LOW, MPU9250_SELF_TEST_ACCE_HIGH, acce_diff[1], "acce y") &&
-       MPU9250_evaluateSelfTest(MPU9250_SELF_TEST_ACCE_LOW, MPU9250_SELF_TEST_ACCE_HIGH, acce_diff[2], "acce z") &&)
+       MPU9250_evaluateSelfTest(MPU9250_SELF_TEST_ACCE_LOW, MPU9250_SELF_TEST_ACCE_HIGH, acce_diff[2], "acce z"))
     {
         return true;
     }

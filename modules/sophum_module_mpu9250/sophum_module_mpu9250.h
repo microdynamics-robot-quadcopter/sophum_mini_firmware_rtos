@@ -373,13 +373,14 @@
 #define MPU9250_G_PER_LSB_16g     (float)((2 * 16) / 65536.0F)
 
 /* self test limits value(percent) */
-#define MPU9250_SELF_TEST_GYRO_LOW      (-14.0)
-#define MPU9250_SELF_TEST_GYRO_HIGH     (14.0)
-#define MPU9250_SELF_TEST_ACCEL_LOW     (-14.0)
-#define MPU9250_SELF_TEST_ACCEL_HIGH    (14.0)
+#define MPU9250_SELF_TEST_GYRO_LOW      (-14.0F)
+#define MPU9250_SELF_TEST_GYRO_HIGH     (14.0F)
+#define MPU9250_SELF_TEST_ACCE_LOW      (-14.0F)
+#define MPU9250_SELF_TEST_ACCE_HIGH     (14.0F)
 
 
 
+/*public variable */
 
 /* public operation */
 extern void MPU9250_Init(void);

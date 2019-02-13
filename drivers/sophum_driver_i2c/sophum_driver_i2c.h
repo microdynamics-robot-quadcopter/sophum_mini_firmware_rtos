@@ -22,8 +22,8 @@
 #define MASTER_LAST_NACK               0x2       /* I2C master nack value for the last byte */
 
 
-/**
- * Initialize an I2C peripheral master mode driver
+/** Initialize an I2C peripheral master mode driver
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param scl_pin : The scl pin
  * @param sda_pin : The sda pin
@@ -34,8 +34,8 @@
 extern bool I2C_MasterInit(uint8_t i2c_port, uint8_t scl_pin,
                            uint8_t sda_pin, uint32_t clk_frq);
 
-/**
- * Write only register address to an I2C peripheral(note: such as reset operation)
+/** Write only register address to an I2C peripheral(note: such as reset operation)
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to write to
  * @param reg_addr: The internal address to write from, I2CDEV_NO_MEM_ADDR if none
@@ -45,8 +45,8 @@ extern bool I2C_MasterInit(uint8_t i2c_port, uint8_t scl_pin,
 extern bool I2C_writeZeroByte(uint8_t i2c_port, uint8_t dev_addr,
                               uint8_t reg_addr);
 
-/**
- * Write one byte to an I2C peripheral
+/** Write one byte to an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to write to
  * @param reg_addr: The internal address to write from, I2CDEV_NO_MEM_ADDR if none
@@ -57,8 +57,8 @@ extern bool I2C_writeZeroByte(uint8_t i2c_port, uint8_t dev_addr,
 extern bool I2C_writeOneByte(uint8_t i2c_port, uint8_t dev_addr,
                              uint8_t reg_addr, uint8_t data);
 
-/**
- * Write mulit bytes to an I2C peripheral
+/** Write mulit bytes to an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to write to
  * @param reg_addr: The internal address to write to, I2CDEV_NO_MEM_ADDR if none
@@ -71,8 +71,8 @@ extern bool I2C_writeMultiBytes(uint8_t i2c_port, uint8_t dev_addr,
                                 uint8_t reg_addr, uint16_t byte_num,
                                 uint8_t* data);
 
-/**
- * Write one bit to an I2C peripheral
+/** Write one bit to an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to write to
  * @param reg_addr: The internal address to write to, I2CDEV_NO_MEM_ADDR if none
@@ -85,8 +85,8 @@ extern bool I2C_writeOneBit(uint8_t i2c_port, uint8_t dev_addr,
                             uint8_t reg_addr, uint8_t bit_id,
                             uint8_t data);
 
-/**
- * Write up to 8 bits to an I2C peripheral(note: start bit is MSB)
+/** Write up to 8 bits to an I2C peripheral(note: start bit is MSB)
+ *
  * @param i2c_port : The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr : The device address to write to
  * @param reg_addr : The internal address to write to, I2CDEV_NO_MEM_ADDR if none
@@ -100,8 +100,8 @@ extern bool I2C_writeMultiBits(uint8_t i2c_port, uint8_t dev_addr,
                                uint8_t reg_addr, uint8_t bit_start,
                                uint8_t bit_len, uint8_t data);
 
-/**
- * Read one byte from an I2C peripheral
+/** Read one byte from an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to read from
  * @param reg_addr: The internal address to read from, I2CDEV_NO_MEM_ADDR if none
@@ -112,8 +112,8 @@ extern bool I2C_writeMultiBits(uint8_t i2c_port, uint8_t dev_addr,
 extern bool I2C_readOneByte(uint8_t i2c_port, uint8_t dev_addr,
                             uint8_t reg_addr, uint8_t* data);
 
-/**
- * Read mulit bytes from an I2C peripheral
+/** Read mulit bytes from an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to read from
  * @param reg_addr: The internal address to read from, I2CDEV_NO_MEM_ADDR if none
@@ -126,8 +126,8 @@ extern bool I2C_readMultiBytes(uint8_t i2c_port, uint8_t dev_addr,
                                uint8_t reg_addr, uint16_t byte_num,
                                uint8_t* data);
 
-/**
- * Read one bit from an I2C peripheral
+/** Read one bit from an I2C peripheral
+ *
  * @param i2c_port: The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr: The device address to read from
  * @param reg_addr: The internal address to read from, I2CDEV_NO_MEM_ADDR if none
@@ -140,8 +140,8 @@ extern bool I2C_readOneBit(uint8_t i2c_port, uint8_t dev_addr,
                            uint8_t reg_addr, uint8_t bit_id,
                            uint8_t* data);
 
-/**
- * Read up to 8 bits from an I2C peripheral(note: start bit is MSB)
+/** Read up to 8 bits from an I2C peripheral(note: start bit is MSB)
+ *
  * @param i2c_port : The I2C port number(I2C_NUM_0 or I2C_NUM_1)
  * @param dev_addr : The device address to read from
  * @param reg_addr : The internal address to read from, I2CDEV_NO_MEM_ADDR if none

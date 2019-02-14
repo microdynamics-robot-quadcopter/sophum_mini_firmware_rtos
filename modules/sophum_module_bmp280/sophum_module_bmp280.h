@@ -12,11 +12,11 @@
 #define BMP280_PRESS_MSB                           0xF7
 #define BMP280_PRESS_LSB                           0xF8
 #define BMP280_PRESS_XLSB                          0xF9
-#define BMP280_TEMP_MST                            0xFA
+#define BMP280_TEMP_MSB                            0xFA
 #define BMP280_TEMP_LSB                            0xFB
 #define BMP280_TEMP_XLSB                           0xFC
 
-/* ID registr(0xD0) option value */
+/* ID register(0xD0) option value */
 #define BMP280_ID_CHIP_ID                          0x58
 
 /* RESET register(0xE0) option value */
@@ -85,6 +85,8 @@
 
 
 
+/* public operation */
+extern void BMP280_Init(void);
 
 
 #endif

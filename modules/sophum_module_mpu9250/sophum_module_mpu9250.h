@@ -147,10 +147,10 @@
 #define MPU9250_FCHOICE_B_LEN                       2
 
 /* GYRO_CONFIG register(0x1B) bit[4:3] option value */
-#define MPU9250_GYROCFG_FS_250dps                   0x00
-#define MPU9250_GYROCFG_FS_500dps                   0x01
-#define MPU9250_GYROCFG_FS_1000dps                  0x02
-#define MPU9250_GYROCFG_FS_2000dps                  0x03
+#define MPU9250_GYROCFG_FS_250DPS                   0x00
+#define MPU9250_GYROCFG_FS_500DPS                   0x01
+#define MPU9250_GYROCFG_FS_1000DPS                  0x02
+#define MPU9250_GYROCFG_FS_2000DPS                  0x03
 
 /* ACCEL_CONFIG register(0x1C) bit */
 #define MPU9250_ACCECFG_XA_SELF_TEST_EN_BIT         7
@@ -160,10 +160,10 @@
 #define MPU9250_ACCECFG_AFS_SEL_LEN                 2
 
 /* ACCEL_CONFIG register(0x1C) bit[4:3] option value */
-#define MPU9250_ACCECFG_FS_2g                       0x00
-#define MPU9250_ACCECFG_FS_4g                       0x01
-#define MPU9250_ACCECFG_FS_8g                       0x02
-#define MPU9250_ACCECFG_FS_16g                      0x03
+#define MPU9250_ACCECFG_FS_2G                       0x00
+#define MPU9250_ACCECFG_FS_4G                       0x01
+#define MPU9250_ACCECFG_FS_8G                       0x02
+#define MPU9250_ACCECFG_FS_16G                      0x03
 
 /* ACCEL_CONFIG2 register(0x1D) bit */
 #define MPU9250_ACCECFG2_FCHOICE_B_BIT              3
@@ -362,15 +362,15 @@
 #define MPU9250_FIFO_COUNTH_FIFO_CNT_LEN             5
 
 
-#define MPU9250_DEG_PER_LSB_250dps  (float)((2 * 250.0F) / 65536.0F)
-#define MPU9250_DEG_PER_LSB_500dps  (float)((2 * 500.0F) / 65536.0F)
-#define MPU9250_DEG_PER_LSB_1000dps (float)((2 * 1000.0F) / 65536.0F)
-#define MPU9250_DEG_PER_LSB_2000dps (float)((2 * 2000.0F) / 65536.0F)
+#define MPU9250_DEG_PER_LSB_250DPS  (float)((2 * 250.0F) / 65536.0F)
+#define MPU9250_DEG_PER_LSB_500DPS  (float)((2 * 500.0F) / 65536.0F)
+#define MPU9250_DEG_PER_LSB_1000DPS (float)((2 * 1000.0F) / 65536.0F)
+#define MPU9250_DEG_PER_LSB_2000DPS (float)((2 * 2000.0F) / 65536.0F)
 
-#define MPU9250_G_PER_LSB_2g      (float)((2 * 2) / 65536.0F)
-#define MPU9250_G_PER_LSB_4g      (float)((2 * 4) / 65536.0F)
-#define MPU9250_G_PER_LSB_8g      (float)((2 * 8) / 65536.0F)
-#define MPU9250_G_PER_LSB_16g     (float)((2 * 16) / 65536.0F)
+#define MPU9250_G_PER_LSB_2G      (float)((2 * 2) / 65536.0F)
+#define MPU9250_G_PER_LSB_4G      (float)((2 * 4) / 65536.0F)
+#define MPU9250_G_PER_LSB_8G      (float)((2 * 8) / 65536.0F)
+#define MPU9250_G_PER_LSB_16G     (float)((2 * 16) / 65536.0F)
 
 /* self test limits value(percent) */
 #define MPU9250_SELF_TEST_GYRO_LOW      (-14.0F)

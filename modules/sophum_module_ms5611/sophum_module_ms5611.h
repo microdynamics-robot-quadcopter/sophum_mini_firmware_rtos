@@ -32,11 +32,9 @@
 #define MS5611_BUFFER_SIZE              10
 #define MS5611_PRES_OFFSET_NUM          50
 
-/* public variable */
-extern uint16_t calibration_params[MS5611_PROM_REG_COUNT+2];
 
 /* public operation */
 extern void MS5611_Init(void);
-extern void MS5611_UpdateData();
+extern void MS5611_updateData(float* temp, float* pres, float* alti);
 
 #endif

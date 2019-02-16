@@ -8,7 +8,7 @@
 volatile float g_ms5611_altitude    = 0;
 volatile float g_ms5611_pressure    = 0;
 volatile float g_ms5611_temperature = 0;
-uint16_t calibration_params[MS5611_PROM_REG_COUNT+2];
+
 
 
 /* private variable */
@@ -17,6 +17,8 @@ static float    g_pressure_offset      = 0; /* save the pressure of 0m(relative)
 static uint16_t g_pressure_offset_cnt  = 0;
 static double   g_pressure_offset_val  = 0.0F;
        bool     g_pressure_offset_flag = false;
+
+static uint16_t calibration_params[MS5611_PROM_REG_COUNT];
 /* FIFO queue */
 // static float temperature_buffer[MS5611_BUFFER_SIZE];
 // static float pressure_buffer[MS5611_BUFFER_SIZE];
@@ -24,10 +26,10 @@ static double   g_pressure_offset_val  = 0.0F;
 
 /* private operation */
 static void MS5611_Reset(void);
-static void MS5611_ReadPROM(void);
-static uint32_t MS5611_GetConversion(uint8_t command);
-static void MS5611_CalcTempAndPres(void);
-static void MS5611_CalcAltitude(void);
+static void MS5611_readPROM(void);
+static uint32_t MS5611_getConversion(uint8_t cmd);
+static void MS5611_calcTempAndPres(void);
+static void MS5611_calcAltitude(void);
 
 
 /**
@@ -59,12 +61,12 @@ static void MS5611_Reset(void)
     
 }
 
-static void MS5611_ReadPROM(void)
+static void MS5611_readPROM(void)
 {
     uint8_t tmp_data[2];
     bool ret;
 
-    for(int i = 1; i <= MS5611_PROM_REG_COUNT; i++)
+    for(int i = 0; i < MS5611_PROM_REG_COUNT; i++)
     {
         ret = I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR,
                                  MS5611_PROM_BASE_ADDR + (i * MS5611_PROM_REG_SIZE),
@@ -76,21 +78,25 @@ static void MS5611_ReadPROM(void)
         calibration_params[i] = (((uint16_t)tmp_data[0] << 8) | tmp_data[1]);
     }
 
+    for (int i = 0; i < MS5611_PROM_REG_COUNT; i++)
+    {
+        printf("C[%d]:%u\n", i, calibration_params[i]);
+    }
 }
 
 void MS5611_Init(void)
 {
     MS5611_Reset();
     vTaskDelay(100 / portTICK_RATE_MS);
-    MS5611_ReadPROM();
+    MS5611_readPROM();
 }
 
-static uint32_t MS5611_GetConversion(uint8_t command)
+static uint32_t MS5611_getConversion(uint8_t cmd)
 {
     bool ret;
     uint8_t conver_res[MS5611_D1D2_SIZE];
 
-    ret = I2C_writeZeroByte(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR, command);
+    ret = I2C_writeZeroByte(I2C_NUM1_MASTER_PORT_GPIO, MS5611_ADDR, cmd);
 
     if(ret == false)
     {
@@ -98,10 +104,10 @@ static uint32_t MS5611_GetConversion(uint8_t command)
     }
     else 
     {
-        // if(command == MS5611_D1 + MS5611_OSR_PRES)
+        // if(cmd == MS5611_D1 + MS5611_OSR_PRES)
         //     printf("pressure config success!!! start conversion...\n");
 
-        // if(command == MS5611_D2 + MS5611_OSR_TEMP)
+        // if(cmd == MS5611_D2 + MS5611_OSR_TEMP)
         //     printf("temperature config success!!! start conversion...\n");
     }
     
@@ -122,22 +128,22 @@ static uint32_t MS5611_GetConversion(uint8_t command)
     return ((uint32_t)conver_res[0] << 16) + ((uint32_t)conver_res[1] << 8) + (uint32_t)conver_res[2];
 }
 
-static void MS5611_CalcTempAndPres(void)
+static void MS5611_calcTempAndPres(void)
 {
-    uint32_t pres_raw = MS5611_GetConversion(MS5611_D1 + MS5611_OSR_PRES);
-    uint32_t temp_raw = MS5611_GetConversion(MS5611_D2 + MS5611_OSR_TEMP);
+    uint32_t pres_raw = MS5611_getConversion(MS5611_D1 + MS5611_OSR_PRES);
+    uint32_t temp_raw = MS5611_getConversion(MS5611_D2 + MS5611_OSR_TEMP);
 
     // printf("D1(Pressure):%u\n", pres_raw);
     // printf("D2(temperature):%u\n", temp_raw);
 
     int32_t dT = 0, TEMP = 0;
-    dT = (int32_t)temp_raw - ((int32_t)calibration_params[5] << 8);
-    TEMP = 2000 + ((dT * (int32_t)calibration_params[6]) >> 23);
+    dT = (int32_t)temp_raw - ((int32_t)calibration_params[4] << 8);
+    TEMP = 2000 + ((dT * (int32_t)calibration_params[5]) >> 23);
 
     int64_t OFF = 0, SENS = 0;
     int32_t PRES = 0;
-    OFF  = ((int64_t)calibration_params[2] << 16) + ((dT * (int64_t)calibration_params[4]) >> 7);
-    SENS = ((int64_t)calibration_params[1] << 15) + ((dT * (int64_t)calibration_params[3]) >> 8);
+    OFF  = ((int64_t)calibration_params[1] << 16) + ((dT * (int64_t)calibration_params[3]) >> 7);
+    SENS = ((int64_t)calibration_params[0] << 15) + ((dT * (int64_t)calibration_params[2]) >> 8);
     
     if(TEMP < 2000)
     {
@@ -162,7 +168,7 @@ static void MS5611_CalcTempAndPres(void)
     g_ms5611_temperature = TEMP / 100.0F;    
 }
 
-static void MS5611_CalcAltitude(void)
+static void MS5611_calcAltitude(void)
 {
     float ans;
     if(g_pressure_offset_flag == false)
@@ -185,14 +191,11 @@ static void MS5611_CalcAltitude(void)
     g_ms5611_altitude += g_altitude_offset;
 }
 
-void MS5611_UpdateData()
+void MS5611_updateData(float* temp, float* pres, float* alti)
 {
-    while(1)
-    {
-        MS5611_CalcTempAndPres();
-        MS5611_CalcAltitude();
-        // printf("temperature: %fC\n", g_ms5611_temperature);
-        // printf("pressure: %fmbar\n", g_ms5611_pressure);
-        printf("altitude: %fm\n", g_ms5611_altitude);
-    }
+    MS5611_calcTempAndPres();
+    MS5611_calcAltitude();
+    *temp = g_ms5611_temperature;
+    *pres = g_ms5611_pressure;
+    *alti = g_ms5611_altitude;
 }

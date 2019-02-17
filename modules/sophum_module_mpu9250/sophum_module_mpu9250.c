@@ -3186,11 +3186,11 @@ void MPU9250_Init(void)
 {
     if(MPU9250_testConnection() == true)
     {
-        printf("test connection SUCCESS!!!\n");
+        printf("MPU9250 test connection SUCCESS!!!\n");
     }
 
     if(MPU9250_getSelfTest() == true)
     {
-        printf("self test SUCCESS!!!\n");
+        printf("MPU9250 self test SUCCESS!!!\n");
     }
 }

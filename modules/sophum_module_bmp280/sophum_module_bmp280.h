@@ -2,6 +2,11 @@
 #define __SOPHUM_MODULE_BMP280_H__
 
 #define BMP280_ADDR                                0x76
+#define BMP280_TEMPE_CALIB_DIG_T1                  0x88
+#define BMP280_DATA_FRAME_SIZE                     3
+#define BMP280_CALIB_DATA_LEN                      24
+#define BMP280_FILTER_NUM                          5
+#define BMP280_FILTER_A                            0.1F
 
 /* BMP280 register address */
 #define BMP280_ID                                  0xD0
@@ -84,9 +89,16 @@
 #define BMP280_CONFIG_SPI3W_EN_ENABLE              0x1
 
 
+#define BMP280_FILTER_CONFIG    (5 << 2)
+#define BMP280_PRESSURE_OSR     BMP280_CTRL_MEAS_OSRS_OVERSAMPLING_8X
+#define BMP280_TEMPERATURE_OSR  BMP280_CTRL_MEAS_OSRS_OVERSAMPLING_8X
+#define BMP280_MODE             ((BMP280_PRESSURE_OSR<<2) | (BMP280_TEMPERATURE_OSR<<5) | BMP280_CTRL_MEAS_NORMAL_MODE)
+
+
 
 /* public operation */
 extern void BMP280_Init(void);
+extern void BMP280_updateData(float* temp, float* pres, float* alti);
 
 
 #endif

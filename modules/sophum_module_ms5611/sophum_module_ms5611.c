@@ -5,12 +5,6 @@
 #include "sophum_module_ms5611.h"
 
 
-volatile float g_ms5611_altitude    = 0;
-volatile float g_ms5611_pressure    = 0;
-volatile float g_ms5611_temperature = 0;
-
-
-
 /* private variable */
 static float    g_altitude_offset      = 0; /* save the altitude of 0m(relative) */
 static float    g_pressure_offset      = 0; /* save the pressure of 0m(relative) */
@@ -23,6 +17,10 @@ static uint16_t calibration_params[MS5611_PROM_REG_COUNT];
 // static float temperature_buffer[MS5611_BUFFER_SIZE];
 // static float pressure_buffer[MS5611_BUFFER_SIZE];
 // static float altitude_buffer[MS5611_BUFFER_SIZE];
+
+volatile static float g_ms5611_altitude    = 0;
+volatile static float g_ms5611_pressure    = 0;
+volatile static float g_ms5611_temperature = 0;
 
 /* private operation */
 static void MS5611_Reset(void);

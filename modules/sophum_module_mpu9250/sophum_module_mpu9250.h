@@ -380,6 +380,28 @@
 #define MPU9250_SELF_TEST_ACCE_HIGH  (14.0F)
 
 
+#define AK8963_ADDR                  0x0C
+
+/* AK8963 register address */
+#define AK8963_WIA                   0x00 /* should return 0x48 */
+#define AK8963_INFO                  0x01
+#define AK8963_ST1                   0x02 /* data ready status bit[0] */
+#define AK8963_HXL                   0x03
+#define AK8963_HXH                   0x04
+#define AK8963_HYL                   0x05
+#define AK8963_HYH                   0x06
+#define AK8963_HZL                   0x07
+#define AK8963_HZH                   0x08
+#define AK8963_ST2                   0x09 /* data overflow bit 3 and data read error status bit 2 */
+#define AK8963_CNTL1                 0x0A /* power down (0000), single-measurement (0001), self-test (1000) and Fuse ROM (1111) modes on bits 3:0 */
+#define AK8963_CNTL2                 0x0B
+#define AK8963_ASTC                  0x0C /* self test control */
+#define AK8963_ASAX                  0x10 /* fuse ROM x-axis sensitivity adjustment value */
+#define AK8963_ASAY                  0x11 /* fuse ROM y-axis sensitivity adjustment value */
+#define AK8963_ASAZ                  0x12 /* fuse ROM z-axis sensitivity adjustment value */
+
+/* AK8963 register bit */
+
 
 /*public variable */
 

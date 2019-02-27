@@ -32,7 +32,7 @@ static int32_t BMP280_getRawPressure(void);
 static int32_t BMP280_getRawTemperature(void);
 static uint32_t BMP280_getCompensateTemp(int32_t adc_pres);
 static uint32_t BMP280_getCompensatePres(int32_t adc_temp);
-static void BMP280_getPressureFilter(float* in, float* out);
+static void BMP280_getPressureFilter(float *in, float *out);
 // static void BMP280_calc
 
 
@@ -77,14 +77,13 @@ static uint32_t BMP280_getCompensateTemp(int32_t adc_temp)
                ((int32_t)g_bmp280_trim.dig_T1))) >> 12) * ((int32_t)g_bmp280_trim.dig_T3)) >> 14;
 
     g_bmp280_trim.t_fine = tmp_var1 + tmp_var2;
-	
     tmp_T = (g_bmp280_trim.t_fine * 5 + 128) >> 8;
 
     return tmp_T;
 }
 
 /* returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits) */
-/* Output value of "24674867" represents 24674867/256 = 96386.2 Pa = 963.862 hPa */
+/* output value of "24674867" represents 24674867/256 = 96386.2 Pa = 963.862 hPa */
 static uint32_t BMP280_getCompensatePres(int32_t adc_pres)
 {
     int64_t tmp_var1, tmp_var2, tmp_pres;
@@ -107,7 +106,7 @@ static uint32_t BMP280_getCompensatePres(int32_t adc_pres)
 
 
 /* limited filter method */
-static void BMP280_getPressureFilter(float* in, float* out)
+static void BMP280_getPressureFilter(float *in, float *out)
 {
     static uint8_t i = 0;
     static float filter_buf[BMP280_FILTER_NUM] = {0.0F};
@@ -124,7 +123,7 @@ static void BMP280_getPressureFilter(float* in, float* out)
     else
     {
         if(i) tmp_deta = *in - filter_buf[i-1];
-        else tmp_deta =*in - filter_buf[BMP280_FILTER_NUM-1];
+        else  tmp_deta = *in - filter_buf[BMP280_FILTER_NUM-1];
 
         if(fabs(tmp_deta) < BMP280_FILTER_A)
         {
@@ -160,7 +159,7 @@ void BMP280_Init(void)
                      BMP280_FILTER_CONFIG);
 }
 
-void BMP280_updateData(float* temp, float* pres, float* alti)
+void BMP280_updateData(float *temp, float *pres, float *alti)
 {
     static float comp_temp, comp_pres;
     int32_t raw_pressure = BMP280_getRawPressure();

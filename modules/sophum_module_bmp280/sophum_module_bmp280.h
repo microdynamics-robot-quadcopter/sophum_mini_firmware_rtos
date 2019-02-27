@@ -98,7 +98,7 @@
 
 /* public operation */
 extern void BMP280_Init(void);
-extern void BMP280_updateData(float* temp, float* pres, float* alti);
+extern void BMP280_updateData(float *temp, float *pres, float *alti);
 
 
 #endif

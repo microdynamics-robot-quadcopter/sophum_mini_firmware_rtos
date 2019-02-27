@@ -198,8 +198,8 @@
 #define BMP388_ERROR_COMM_FAIL                  -7
 #define BMP388_ERROR_FIFO_WATERMARK_NOT_REACHED -8
 
-/* BMP388 trimming data */
-struct BMP388_trimming_data
+/* BMP388 trimming coefficients */
+struct BMP388_trimming_coeff
 {
     uint16_t par_t1;
     uint16_t par_t2;
@@ -400,8 +400,8 @@ struct BMP388_dev
     uint8_t chip_id;
     /* device id */
     uint8_t dev_id;
-    /* trimming data */
-    struct BMP388_trimming_data trim_data;
+    /* trimming coefficients */
+    struct BMP388_trimming_coeff trim_coeff;
     /* sensor settings */
     struct BMP388_settings settings;
     /* sensor and interrupt status flags */
@@ -415,7 +415,7 @@ struct BMP388_dev
 
 /** This API is the entry point.
  *
- * It reads the chip-id and trimming data of the sensor.
+ * It reads the chip-id and trimming coefficients of the sensor.
  *
  * @param[in,out] dev: structure instance of BMP388_dev.
  *
@@ -569,8 +569,8 @@ extern int8_t BMP388_getRegs(uint8_t reg_addr, uint8_t *reg_data, uint16_t lengt
  * desired settings. User can do OR operation of these macros for configuring
  * multiple settings.
  *
- * Macros                          |  Functionality
- * --------------------------------|----------------------------
+ * Macros                        |  Functionality
+ * ------------------------------|----------------------------
  * BMP3_FIFO_MODE_SEL            |  Enable/Disable FIFO
  * BMP3_FIFO_STOP_ON_FULL_EN_SEL |  Set FIFO stop on full interrupt
  * BMP3_FIFO_TIME_EN_SEL         |  Enable/Disable FIFO time
@@ -654,5 +654,5 @@ extern int8_t BMP388_getStatus(struct BMP388_dev *dev);
 extern int8_t BMP388_setFIFOWatermark(const struct BMP388_dev *dev);
 
 
-extern void BMP388_updateData(float* temp, float* pres, float* alti);
+extern void BMP388_updateData(float *temp, float *pres, float *alti);
 #endif

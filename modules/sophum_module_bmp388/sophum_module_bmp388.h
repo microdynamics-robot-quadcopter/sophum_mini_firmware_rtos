@@ -64,7 +64,7 @@
 #define BMP388_CMD                0x7E
 
 /* CHIP_ID register(0x00) option value */
-#define BMP388_CHIP_ID_VALUE  0x50
+#define BMP388_CHIP_ID_VALUE      0x50
 
 /* ERR_REG register(0x01) bit */
 #define BMP388_ERR_REG_CONF_ERR_BIT   2
@@ -407,7 +407,7 @@ struct BMP388_dev
     /* sensor and interrupt status flags */
     struct BMP388_status status;
     /* FIFO data and settings structure */
-    struct bmp388_fifo *fifo;
+    struct BMP388_fifo *fifo;
 };
 
 /* public operation */
@@ -532,30 +532,6 @@ extern int8_t BMP388_getOpMode(uint8_t *op_mode, const struct BMP388_dev *dev);
  */
 extern int8_t BMP388_getSensorData(uint8_t sensor_comp, struct BMP388_data *data, struct BMP388_dev *dev);
 
-/** This API writes the given data to the register address
- *  of the sensor.
- *
- * @param[in] reg_addr : register address from where the data to be written.
- * @param[in] reg_data : pointer to data buffer which is to be written in the sensor.
- * @param[in] len : no of bytes of data to write..
- * @param[in] dev : structure instance of BMP388_dev.
- *
- * @return result of API execution status
- * @retval zero -> success / +ve value -> warning / -ve value -> error
- */
-extern int8_t BMP388_setRegs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, const struct BMP388_dev *dev);
-
-/** This API reads the data from the given register address of the sensor.
- *
- * @param[in] reg_addr : register address from where the data to be read
- * @param[out] reg_data : pointer to data buffer to store the read data.
- * @param[in] length : no of bytes of data to be read.
- * @param[in] dev : structure instance of BMP388_dev.
- *
- * @return result of API execution status
- * @retval zero -> success / +ve value -> warning / -ve value -> error
- */
-extern int8_t BMP388_getRegs(uint8_t reg_addr, uint8_t *reg_data, uint16_t length, const struct BMP388_dev *dev);
 
 /** This API sets the fifo_config_1(fifo_mode, fifo_stop_on_full, fifo_time_en, 
  *  fifo_press_en, fifo_temp_en), fifo_config_2(fifo_subsampling, data_select)
@@ -639,7 +615,7 @@ extern int8_t BMP388_extractFIFOData(struct BMP388_data *data, struct BMP388_dev
  * @return result of API execution status.
  * @retval zero -> success / -ve value -> error
  */
-extern int8_t BMP388_getStatus(struct BMP388_dev *dev);
+extern int8_t BMP388_getAllStatus(struct BMP388_dev *dev);
 
 /** This API sets the fifo watermark length according to the frames count
  *  set by the user in the device structure. Refer below for usage.
@@ -655,4 +631,5 @@ extern int8_t BMP388_setFIFOWatermark(const struct BMP388_dev *dev);
 
 
 extern void BMP388_updateData(float *temp, float *pres, float *alti);
+
 #endif

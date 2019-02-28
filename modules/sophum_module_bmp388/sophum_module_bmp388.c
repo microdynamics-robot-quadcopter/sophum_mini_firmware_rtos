@@ -396,7 +396,7 @@ static void BMP388_parseFIFOSettings(const uint8_t *reg_data, struct BMP388_fifo
  *
  * @param[in] header : pointer variable which stores the fifo settings data
  * read from the sensor.
- * @param[in,out] fifo : structure instance of bmp3_fifo which stores the
+ * @param[in,out] fifo : structure instance of BMP388_fifo which stores the
  * read fifo data.
  * @param[out] byte_index : byte count which is incremented according to the
  * of data.
@@ -407,7 +407,7 @@ static void BMP388_parseFIFOSettings(const uint8_t *reg_data, struct BMP388_fifo
  * @return result of API execution status.
  * @retval zero -> success / -ve value -> error
  */
-static uint8_t BMP388_parseFIFODataFrame(uint8_t header, struct bmp3_fifo *fifo, uint16_t *byte_index,
+static uint8_t BMP388_parseFIFODataFrame(uint8_t header, struct BMP388_fifo *fifo, uint16_t *byte_index,
 					                     struct BMP388_uncomp_data *uncomp_data, uint8_t *parsed_frames);
 
 /** This internal API unpacks the FIFO data frame from the fifo buffer and
@@ -485,7 +485,7 @@ static void BMP388_parseFIFOSensorData(uint8_t sensor_comp, const uint8_t *fifo_
  * @param[out] fifo : FIFO structure instance where the fifo related variables
  * are reset.
  */
-static void BMP388_resetFIFOIndex(struct bmp3_fifo *fifo);
+static void BMP388_resetFIFOIndex(struct BMP388_fifo *fifo);
 
 /** This API gets the command ready, data ready for pressure and
  *  temperature, power on reset status from the sensor.
@@ -528,3 +528,208 @@ static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev);
  * @retval zero -> success / -ve value -> error.
  */
 static int8_t BMP388_convertFramesToBytes(uint16_t *watermark_len, const struct BMP388_dev *dev);
+
+
+/*==============================private operation define ======================================*/
+
+
+static int8_t BMP388_getTrimCoefficients(struct BMP388_dev *dev)
+{
+    return 8;
+}
+
+static void BMP388_parseTrimCoefficients(const uint8_t *reg_data, struct BMP388_dev *dev);
+
+static int8_t BMP388_getODRAndFilterSettings(struct BMP388_dev *dev);
+
+static void BMP388_parseSensorData(const uint8_t *reg_data, struct BMP388_uncomp_data *uncomp_data);
+
+static int8_t BMP388_compensateData(uint8_t sensor_comp, const struct BMP388_uncomp_data *uncomp_data,
+			                        struct BMP388_data *comp_data, struct BMP388_trimming_coeff *calib_data);
+
+static int64_t BMP388_compensateTemperature(const struct BMP388_uncomp_data *uncomp_data,
+						                    struct BMP388_trimming_coeff *calib_data);
+
+static uint64_t BMP388_compensatePressure(const struct BMP388_uncomp_data *uncomp_data,
+					                      const struct BMP388_trimming_coeff *calib_data);
+
+static uint32_t BMP388_calcPow(uint8_t base, uint8_t power);
+
+static uint8_t BMP388_areSettingsChanged(uint32_t sub_settings, uint32_t settings);
+
+static void BMP388_interleaveRegAddr(const uint8_t *reg_addr, uint8_t *temp_buff, const uint8_t *reg_data, uint8_t len);
+
+static int8_t BMP388_setPowerControlSettings(uint32_t desired_settings, const struct BMP388_dev *dev);
+
+static int8_t BMP388_setODRAndFilterSettings(uint32_t desired_settings, struct BMP388_dev *dev);
+
+static int8_t BMP388_setInterruptControlSettings(uint32_t desired_settings, const struct BMP388_dev *dev);
+
+static int8_t BMP388_setAdvanceSettings(uint32_t desired_settings, const struct BMP388_dev *dev);
+
+static void BMP388_fillOSRData(uint32_t desired_settings, uint8_t *addr, uint8_t *reg_data, uint8_t *len,
+			                   const struct BMP388_dev *dev);
+
+static void BMP388_fillODRData(uint8_t *addr, uint8_t *reg_data, uint8_t *len, struct BMP388_dev *dev);
+
+static void BMP388_fillFilterData(uint8_t *addr, uint8_t *reg_data, uint8_t *len, const struct BMP388_dev *dev);
+
+static int8_t BMP388_checkNullPointer(const struct BMP388_dev *dev)
+{
+    int8_t ret;
+    if(dev == NULL)
+    {
+        /* device structure pointer is not valid */
+        ret = BMP388_ERROR_NULL_PTR;
+    }
+    else
+    {
+        ret = BMP388_OK;
+    }
+    return ret;
+}
+
+static void BMP388_parseSettingsData(const uint8_t *reg_data, struct BMP388_dev *dev);
+
+static void BMP388_parsePowerControlSettings(const uint8_t *reg_data, struct BMP388_settings *settings);
+
+static void BMP388_parseODRAndFilterSettings(const uint8_t *reg_data, struct BMP388_ODR_filter_settings *settings);
+
+static void BMP388_parseInterruptControlSettings(const uint8_t *reg_data, struct BMP388_int_ctrl_settings *settings);
+
+static void BMP388_parseAdvanceSettings(const uint8_t *reg_data, struct BMP388_adv_settings *settings);
+
+static int8_t BMP388_validNormalModeSettings(struct BMP388_dev *dev);
+
+static int8_t BMP388_validOSRAndODRSettings(const struct BMP388_dev *dev);
+
+static uint16_t BMP388_calcPresMeasTime(const struct BMP388_dev *dev);
+
+static uint16_t BMP388_calcTempMeasTime(const struct BMP388_dev *dev);
+
+static int8_t BMP388_verifyMeasTimeAndODRDuration(uint16_t meas_t, uint32_t odr_duration);
+
+static int8_t BMP388_putDeviceToSleep(const struct BMP388_dev *dev);
+
+static int8_t BMP388_setNormalMode(struct BMP388_dev *dev);
+
+static int8_t BMP388_writePowerMode(const struct BMP388_dev *dev);
+
+static void BMP388_fillFIFOConfig1(uint16_t desired_settings, uint8_t *reg_data,
+			                       struct BMP388_fifo_settings *dev_fifo);
+
+static void BMP388_fillFIFOConfig2(uint16_t desired_settings, uint8_t *reg_data,
+			                       const struct BMP388_fifo_settings *dev_fifo);
+
+
+static void BMP388_fillFIFOInterruptControl(uint16_t desired_settings, uint8_t *reg_data,
+			                                const struct BMP388_fifo_settings *dev_fifo);
+
+
+static void BMP388_parseFIFOSettings(const uint8_t *reg_data, struct BMP388_fifo_settings *dev_fifo);
+
+
+static uint8_t BMP388_parseFIFODataFrame(uint8_t header, struct BMP388_fifo *fifo, uint16_t *byte_index,
+					                     struct BMP388_uncomp_data *uncomp_data, uint8_t *parsed_frames);
+
+
+static void BMP388_unpackTempAndPresFrame(uint16_t *byte_index, const uint8_t *fifo_buffer,
+					                      struct BMP388_uncomp_data *uncomp_data);
+
+
+static void BMP388_unpackPressFrame(uint16_t *byte_index, const uint8_t *fifo_buffer,
+				                    struct BMP388_uncomp_data *uncomp_data);
+
+
+static void BMP388_unpackTempFrame(uint16_t *byte_index, const uint8_t *fifo_buffer,
+                                   struct BMP388_uncomp_data *uncomp_data);
+
+static void BMP388_unpackTimeFrame(uint16_t *byte_index, const uint8_t *fifo_buffer,
+                                   uint32_t *sensor_time);
+
+static void BMP388_getHeaderInfo(uint8_t *header, const uint8_t *fifo_buffer, uint16_t *byte_index);
+static void BMP388_parseFIFOSensorData(uint8_t sensor_comp, const uint8_t *fifo_buffer,
+					                   struct BMP388_uncomp_data *uncomp_data);
+
+static void BMP388_resetFIFOIndex(struct BMP388_fifo *fifo);
+static int8_t BMP388_getSensorStatus(struct BMP388_dev *dev);
+static int8_t BMP388_getInterruptStatus(struct BMP388_dev *dev);
+static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev);
+static int8_t BMP388_convertFramesToBytes(uint16_t *watermark_len, const struct BMP388_dev *dev);
+
+/*=================start=================*/
+static int8_t BMP388_getChipID(struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+    uint8_t tmp_data = 0x00;
+    ret = I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_CHIP_ID, &tmp_data);
+    if(ret == true)
+    {
+        ret = BMP388_OK;
+        dev->chip_id = tmp_data;
+    }
+    else
+    {
+        ret = BMP388_ERROR_COMM_FAIL;
+    }
+    return ret;
+}
+/*=================end=================*/
+
+/*============================public operation define =================================*/
+int8_t BMP388_Init(struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+    /* check for null pointer in the device structure */
+    ret = BMP388_checkNullPointer(dev);
+    /* proceed if null check is fine */
+    if(ret == BMP388_OK)
+    {
+        /* read chip id of BMP388 sensor */
+        ret = BMP388_getChipID(dev);
+        /* check if the chip id is valid or not */
+        if((ret == BMP388_OK) && (dev->chip_id == BMP388_CHIP_ID_VALUE))
+        {
+            /* reset the sensor */
+            ret = BMP388_doSoftReset(dev);
+            if(ret == BMP388_OK)
+            {
+                ret = BMP388_getTrimCoefficients(dev);
+            }
+        }
+        else
+        {
+            ret = BMP388_ERROR_DEV_NOT_FOUND;
+        }
+    }
+    return ret;
+}
+
+int8_t BMP388_doSoftReset(const struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+
+    /* check for null pointer in the device structure */
+    ret = BMP388_checkNullPointer(dev);
+    /* proceed if null check is fine */
+    if(ret == BMP388_OK)
+    {
+        // ret = BMP388_getST
+    }
+    return ret;
+}
+
+int8_t BMP388_setSensorSettings(uint32_t desired_settings, struct BMP388_dev *dev);
+int8_t BMP388_getSensorSettings(struct BMP388_dev *dev);
+int8_t BMP388_setOpMode(struct BMP388_dev *dev);
+int8_t BMP388_getOpMode(uint8_t *op_mode, const struct BMP388_dev *dev);
+int8_t BMP388_getSensorData(uint8_t sensor_comp, struct BMP388_data *data, struct BMP388_dev *dev);
+int8_t BMP388_setFIFOSettings(uint16_t desired_settings, const struct BMP388_dev *dev);
+int8_t BMP388_getFIFOSettings(const struct BMP388_dev *dev);
+int8_t BMP388_getFIFOData(const struct BMP388_dev *dev);
+int8_t BMP388_getFIFOLength(uint16_t *fifo_length, const struct BMP388_dev *dev);
+int8_t BMP388_extractFIFOData(struct BMP388_data *data, struct BMP388_dev *dev);
+int8_t BMP388_getAllStatus(struct BMP388_dev *dev);
+int8_t BMP388_setFIFOWatermark(const struct BMP388_dev *dev);
+void BMP388_updateData(float *temp, float *pres, float *alti);
+

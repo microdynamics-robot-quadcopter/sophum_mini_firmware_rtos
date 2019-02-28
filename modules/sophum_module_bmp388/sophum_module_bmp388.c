@@ -535,10 +535,45 @@ static int8_t BMP388_convertFramesToBytes(uint16_t *watermark_len, const struct 
 
 static int8_t BMP388_getTrimCoefficients(struct BMP388_dev *dev)
 {
-    return 8;
+    int8_t ret = 0;
+    uint8_t trimming_coeff_table[BMP388_TRIMMING_COEFFICIENTS_LEN] = {0};
+
+    /* read the trimming coefficients from the sensor's NVM */
+    ret = I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_NVM_PAR_T1_7_0,
+                             BMP388_TRIMMING_COEFFICIENTS_LEN, trimming_coeff_table);
+
+    if(ret == true)
+    {
+        /* parse trimming coefficients and store it in device structure */
+        BMP388_parseTrimCoefficients(trimming_coeff_table, dev);
+        ret = BMP388_OK;
+    }
+    else
+    {
+        ret = BMP388_ERROR_COMM_FAIL;
+    }
+    return ret;
 }
 
-static void BMP388_parseTrimCoefficients(const uint8_t *reg_data, struct BMP388_dev *dev);
+static void BMP388_parseTrimCoefficients(const uint8_t *reg_data, struct BMP388_dev *dev)
+{
+    /* temporary variable to store the aligned trim data */
+    struct BMP388_trimming_coeff *trim_coeff = &dev->trim_coeff;
+    trim_coeff->par_t1  = BMP3_CONCAT_BYTES(reg_data[1], reg_data[0]);
+    trim_coeff->par_t2  = BMP3_CONCAT_BYTES(reg_data[3], reg_data[2]);
+    trim_coeff->par_t3  = (int8_t)reg_data[4];
+    trim_coeff->par_p1  = (int16_t)BMP3_CONCAT_BYTES(reg_data[6], reg_data[5]);
+    trim_coeff->par_p2  = (int16_t)BMP3_CONCAT_BYTES(reg_data[8], reg_data[7]);
+    trim_coeff->par_p3  = (int8_t)reg_data[9];
+    trim_coeff->par_p4  = (int8_t)reg_data[10];
+    trim_coeff->par_p5  = BMP3_CONCAT_BYTES(reg_data[12], reg_data[11]);
+    trim_coeff->par_p6  = BMP3_CONCAT_BYTES(reg_data[14],  reg_data[13]);
+    trim_coeff->par_p7  = (int8_t)reg_data[15];
+    trim_coeff->par_p8  = (int8_t)reg_data[16];
+    trim_coeff->par_p9  = (int16_t)BMP3_CONCAT_BYTES(reg_data[18], reg_data[17]);
+    trim_coeff->par_p10 = (int8_t)reg_data[19];
+    trim_coeff->par_p11 = (int8_t)reg_data[20];
+}
 
 static int8_t BMP388_getODRAndFilterSettings(struct BMP388_dev *dev);
 
@@ -652,10 +687,86 @@ static void BMP388_parseFIFOSensorData(uint8_t sensor_comp, const uint8_t *fifo_
 					                   struct BMP388_uncomp_data *uncomp_data);
 
 static void BMP388_resetFIFOIndex(struct BMP388_fifo *fifo);
-static int8_t BMP388_getSensorStatus(struct BMP388_dev *dev);
-static int8_t BMP388_getInterruptStatus(struct BMP388_dev *dev);
-static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev);
+
+
+static int8_t BMP388_getSensorStatus(struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+    uint8_t tmp_data = 0x00;
+    ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_STATUS,
+                            BMP388_STATUS_DRDY_TEMP_BIT, 3, &tmp_data);
+
+    if(ret == true)
+    {
+        dev->status.sensor.drdy_temp = tmp_data & 0x40;
+        dev->status.sensor.drdy_pres = tmp_data & 0x20;
+        dev->status.sensor.cmd_rdy   = tmp_data & 0x10;
+
+        ret = I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_EVENT,
+                              &tmp_data);
+        if(ret == true)
+        {
+            dev->status.pwr_on_rst = tmp_data & 0x01;
+            ret = BMP388_OK;
+        }
+        else
+        {
+            ret = BMP388_ERROR_COMM_FAIL;
+        }
+    }
+    else
+    {
+        ret = BMP388_ERROR_COMM_FAIL;
+    }
+    return ret;
+}
+
+
+static int8_t BMP388_getInterruptStatus(struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+    uint8_t tmp_data = 0x00;
+    ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_INT_STATUS,
+                            BMP388_INT_STATUS_DRDY_BIT, 4, &tmp_data);
+
+    if(ret == true)
+    {
+        dev->status.intr.drdy      = tmp_data & 0x08;
+        dev->status.intr.fifo_full = tmp_data & 0x02;
+        dev->status.intr.fifo_wm   = tmp_data & 0x01;
+        ret = BMP388_OK;
+    }
+    else
+    {
+        ret = BMP388_ERROR_COMM_FAIL;
+    }
+    return ret;
+}
+
+
+static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev)
+{
+    int8_t ret = 0;
+    uint8_t tmp_data = 0x00;
+    ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_ERR_REG,
+                            BMP388_ERR_REG_CONF_ERR_BIT, 3, &tmp_data);
+
+    if(ret == true)
+    {
+        dev->status.err.conf  = tmp_data & 0x04;
+        dev->status.err.cmd   = tmp_data & 0x02;
+        dev->status.err.fatal = tmp_data & 0x01;
+        ret = BMP388_OK;
+    }
+    else
+    {
+        ret = BMP388_ERROR_COMM_FAIL;
+    }
+    return ret;
+}
+
 static int8_t BMP388_convertFramesToBytes(uint16_t *watermark_len, const struct BMP388_dev *dev);
+
 
 /*=================start=================*/
 static int8_t BMP388_getChipID(struct BMP388_dev *dev)
@@ -665,8 +776,8 @@ static int8_t BMP388_getChipID(struct BMP388_dev *dev)
     ret = I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_CHIP_ID, &tmp_data);
     if(ret == true)
     {
-        ret = BMP388_OK;
         dev->chip_id = tmp_data;
+        ret = BMP388_OK;
     }
     else
     {
@@ -674,6 +785,8 @@ static int8_t BMP388_getChipID(struct BMP388_dev *dev)
     }
     return ret;
 }
+
+
 /*=================end=================*/
 
 /*============================public operation define =================================*/
@@ -714,7 +827,29 @@ int8_t BMP388_doSoftReset(const struct BMP388_dev *dev)
     /* proceed if null check is fine */
     if(ret == BMP388_OK)
     {
-        // ret = BMP388_getST
+        ret = BMP388_getSensorStatus(dev);
+        if((ret == BMP388_OK) && (dev->status.sensor.cmd_rdy == 1))
+        {
+            /* do soft reset */
+            ret = I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_CMD,
+                                   BMP388_CMD_SOFTRESET);
+            if(ret == true)
+            {
+                vTaskDelay(2 / portTICK_RATE_MS);
+                /* read for command error status */
+                ret = BMP388_getErrorStatus(dev);
+                /* check command error status */
+                if((ret != BMP388_OK) || (dev->status.err.cmd == 1))
+                {
+                    /* command not written hence return error */
+                    ret = BMP388_ERROR_CMD_EXEC_FAILED;
+                }
+            }
+            else
+            {
+                ret = BMP388_ERROR_CMD_EXEC_FAILED;
+            }
+        }
     }
     return ret;
 }

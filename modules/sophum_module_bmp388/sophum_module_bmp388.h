@@ -4,6 +4,10 @@
 
 #define BMP388_ADDR            0x76
 
+#define BMP388_TRIMMING_COEFFICIENTS_LEN     21
+#define BMP388_PRES_AND_TEMP_HEADER_DATA_LEN 7
+#define BMP388_PRES_OR_TEMP_HEADER_DATA_LEN  4
+
 /* BMP388 pressure settling time (micro secs) */
 #define BMP388_PRESS_SETTLE_TIME    392
 /* BMP388 temperature settling time (micro secs) */
@@ -66,7 +70,7 @@
 /* CHIP_ID register(0x00) option value */
 #define BMP388_CHIP_ID_VALUE      0x50
 
-/* ERR_REG register(0x01) bit */
+/* ERR_REG register(0x02) bit */
 #define BMP388_ERR_REG_CONF_ERR_BIT   2
 #define BMP388_ERR_REG_CMD_ERR_BIT    1
 #define BMP388_ERR_REG_FATAL_ERR_BIT  0
@@ -184,7 +188,6 @@
 #define BMP388_CMD_SOFTRESET         0xB6
 
 
-
 /* API status macros */
 #define BMP388_OK                                0
 #define BMP388_WARN_SENSOR_NOT_ENABLED           1
@@ -197,6 +200,9 @@
 #define BMP388_ERROR_INVALID_LEN                -6
 #define BMP388_ERROR_COMM_FAIL                  -7
 #define BMP388_ERROR_FIFO_WATERMARK_NOT_REACHED -8
+
+/* Macro to combine two 8 bit data's to form a 16 bit data */
+#define BMP3_CONCAT_BYTES(msb, lsb)     (((uint16_t)msb << 8) | (uint16_t)lsb)
 
 /* BMP388 trimming coefficients */
 struct BMP388_trimming_coeff
@@ -246,9 +252,9 @@ struct BMP388_ODR_filter_settings
 struct BMP388_sens_status
 {
     /* command ready status */
-    uint8_t cmd_dry;
+    uint8_t cmd_rdy;
     /* data ready for pressure */
-    uint8_t drdy_press;
+    uint8_t drdy_pres;
     /* data ready for temperature */
     uint8_t drdy_temp;
 };

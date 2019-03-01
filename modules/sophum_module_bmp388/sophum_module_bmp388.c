@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "driver/i2c.h"
 #include "sophum_driver_i2c.h"
+#include "sophum_driver_log.h"
 #include "sophum_module_bmp388.h"
 
 
@@ -557,8 +558,9 @@ static int8_t BMP388_getTrimCoefficients(struct BMP388_dev *dev)
 
 static void BMP388_parseTrimCoefficients(const uint8_t *reg_data, struct BMP388_dev *dev)
 {
-    /* temporary variable to store the aligned trim data */
+    /* create a temporary variable to store the aligned trim data */
     struct BMP388_trimming_coeff *trim_coeff = &dev->trim_coeff;
+
     trim_coeff->par_t1  = BMP3_CONCAT_BYTES(reg_data[1], reg_data[0]);
     trim_coeff->par_t2  = BMP3_CONCAT_BYTES(reg_data[3], reg_data[2]);
     trim_coeff->par_t3  = (int8_t)reg_data[4];
@@ -693,30 +695,36 @@ static int8_t BMP388_getSensorStatus(struct BMP388_dev *dev)
 {
     int8_t ret = 0;
     uint8_t tmp_data = 0x00;
+    /* read BMP388 STATUS bit[6:4] */
     ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_STATUS,
                             BMP388_STATUS_DRDY_TEMP_BIT, 3, &tmp_data);
 
     if(ret == true)
     {
-        dev->status.sensor.drdy_temp = tmp_data & 0x40;
-        dev->status.sensor.drdy_pres = tmp_data & 0x20;
-        dev->status.sensor.cmd_rdy   = tmp_data & 0x10;
+        /* tmp_data is bit[2:0] value */
+        dev->status.sensor.drdy_temp = tmp_data & 0x04;
+        dev->status.sensor.drdy_pres = tmp_data & 0x02;
+        dev->status.sensor.cmd_rdy   = tmp_data & 0x01;
 
-        ret = I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_EVENT,
-                              &tmp_data);
+        /* read BMP388 EVENT bit[0] */
+        ret = I2C_readOneBit(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_EVENT,
+                             BMP388_EVENT_POR_DETECTED_BIT, &tmp_data);
+
         if(ret == true)
         {
-            dev->status.pwr_on_rst = tmp_data & 0x01;
+            dev->status.pwr_on_rst = tmp_data;
             ret = BMP388_OK;
         }
         else
         {
             ret = BMP388_ERROR_COMM_FAIL;
+            SOPHUM_LOG("commun fail", ERROR);
         }
     }
     else
     {
         ret = BMP388_ERROR_COMM_FAIL;
+        SOPHUM_LOG("commun fail", ERROR);
     }
     return ret;
 }
@@ -726,11 +734,13 @@ static int8_t BMP388_getInterruptStatus(struct BMP388_dev *dev)
 {
     int8_t ret = 0;
     uint8_t tmp_data = 0x00;
+    /* read BMP388 INT_STATUS bit[3,1:0] */
     ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_INT_STATUS,
                             BMP388_INT_STATUS_DRDY_BIT, 4, &tmp_data);
 
     if(ret == true)
     {
+        /* tmp_data is bit[3:0] value */
         dev->status.intr.drdy      = tmp_data & 0x08;
         dev->status.intr.fifo_full = tmp_data & 0x02;
         dev->status.intr.fifo_wm   = tmp_data & 0x01;
@@ -739,6 +749,7 @@ static int8_t BMP388_getInterruptStatus(struct BMP388_dev *dev)
     else
     {
         ret = BMP388_ERROR_COMM_FAIL;
+        SOPHUM_LOG("commun fail", ERROR);
     }
     return ret;
 }
@@ -748,11 +759,13 @@ static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev)
 {
     int8_t ret = 0;
     uint8_t tmp_data = 0x00;
+    /* read BMP388 ERR_REG bit[2:0] */
     ret = I2C_readMultiBits(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_ERR_REG,
                             BMP388_ERR_REG_CONF_ERR_BIT, 3, &tmp_data);
 
     if(ret == true)
     {
+        /* tmp_data is bit[2:0] value */
         dev->status.err.conf  = tmp_data & 0x04;
         dev->status.err.cmd   = tmp_data & 0x02;
         dev->status.err.fatal = tmp_data & 0x01;
@@ -761,6 +774,7 @@ static int8_t BMP388_getErrorStatus(struct BMP388_dev *dev)
     else
     {
         ret = BMP388_ERROR_COMM_FAIL;
+        SOPHUM_LOG("commun fail", ERROR);
     }
     return ret;
 }
@@ -782,6 +796,7 @@ static int8_t BMP388_getChipID(struct BMP388_dev *dev)
     else
     {
         ret = BMP388_ERROR_COMM_FAIL;
+        SOPHUM_LOG("commun fail", ERROR);
     }
     return ret;
 }
@@ -798,22 +813,44 @@ int8_t BMP388_Init(struct BMP388_dev *dev)
     /* proceed if null check is fine */
     if(ret == BMP388_OK)
     {
-        /* read chip id of BMP388 sensor */
+        /* read the chip ID of BMP388 sensor */
         ret = BMP388_getChipID(dev);
-        /* check if the chip id is valid or not */
+        /* check if the chip ID is valid or not */
         if((ret == BMP388_OK) && (dev->chip_id == BMP388_CHIP_ID_VALUE))
         {
+            SOPHUM_LOG("get chip ID", SUCCESS);
+
             /* reset the sensor */
             ret = BMP388_doSoftReset(dev);
             if(ret == BMP388_OK)
             {
+                SOPHUM_LOG("do soft reset", SUCCESS);
+                /* read the trimming coefficients */
                 ret = BMP388_getTrimCoefficients(dev);
+                if(ret == BMP388_OK)
+                {
+                    SOPHUM_LOG("get trimming coefficients", SUCCESS);
+                }
+                else
+                {
+                    SOPHUM_LOG("get trimming coefficients", ERROR);
+                }
+            }
+            else
+            {
+                SOPHUM_LOG("do soft reset", ERROR);
             }
         }
         else
         {
             ret = BMP388_ERROR_DEV_NOT_FOUND;
+            SOPHUM_LOG("device not found", ERROR);
         }
+    }
+    else
+    {
+        ret = BMP388_ERROR_NULL_PTR;
+        SOPHUM_LOG("device structure null pointer", ERROR);
     }
     return ret;
 }
@@ -821,7 +858,6 @@ int8_t BMP388_Init(struct BMP388_dev *dev)
 int8_t BMP388_doSoftReset(const struct BMP388_dev *dev)
 {
     int8_t ret = 0;
-
     /* check for null pointer in the device structure */
     ret = BMP388_checkNullPointer(dev);
     /* proceed if null check is fine */
@@ -830,11 +866,13 @@ int8_t BMP388_doSoftReset(const struct BMP388_dev *dev)
         ret = BMP388_getSensorStatus(dev);
         if((ret == BMP388_OK) && (dev->status.sensor.cmd_rdy == 1))
         {
+            SOPHUM_LOG("get sensor status", SUCCESS);
             /* do soft reset */
             ret = I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, BMP388_ADDR << 1, BMP388_CMD,
                                    BMP388_CMD_SOFTRESET);
             if(ret == true)
             {
+                /* wait for 2ms */
                 vTaskDelay(2 / portTICK_RATE_MS);
                 /* read for command error status */
                 ret = BMP388_getErrorStatus(dev);
@@ -843,13 +881,29 @@ int8_t BMP388_doSoftReset(const struct BMP388_dev *dev)
                 {
                     /* command not written hence return error */
                     ret = BMP388_ERROR_CMD_EXEC_FAILED;
+                    SOPHUM_LOG("get error status", ERROR);
+                }
+                else
+                {
+                    SOPHUM_LOG("get error status", SUCCESS);
                 }
             }
             else
             {
                 ret = BMP388_ERROR_CMD_EXEC_FAILED;
+                SOPHUM_LOG("get error status", ERROR);
             }
         }
+        else
+        {
+            ret = BMP388_ERROR_COMM_FAIL;
+            SOPHUM_LOG("get sensor status", ERROR);
+        }
+    }
+    else
+    {
+        ret = BMP388_ERROR_NULL_PTR;
+        SOPHUM_LOG("device structure null pointer", ERROR);
     }
     return ret;
 }

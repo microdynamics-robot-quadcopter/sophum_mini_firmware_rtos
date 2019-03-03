@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include "driver/i2c.h"
 #include "sophum_driver_i2c.h"
 
 

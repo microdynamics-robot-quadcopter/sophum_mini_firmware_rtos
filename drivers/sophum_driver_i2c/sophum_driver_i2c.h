@@ -1,6 +1,11 @@
 #ifndef __SOPHUM_DRIVER_I2C_H__
 #define __SOPHUM_DRIVER_I2C_H__
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "driver/i2c.h"
+
 #define I2C_NUM0_MASTER_SCL_GPIO       25        /* gpio number for I2C num0 master clock */
 #define I2C_NUM0_MASTER_SDA_GPIO       26        /* gpio number for I2C num0 master data  */
 #define I2C_NUM0_MASTER_PORT_GPIO      I2C_NUM_0 /* I2C port number for master dev */

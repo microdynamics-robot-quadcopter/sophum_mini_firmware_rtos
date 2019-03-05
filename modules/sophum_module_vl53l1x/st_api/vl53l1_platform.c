@@ -39,6 +39,9 @@
 #include <math.h>
 
 int8_t VL53L1_WrByte(VL53L1_DEV Dev, uint16_t index, uint8_t data) {
+	int8_t ret = 0;
+	uint8_t dev_addr = Dev->dev_addr;
+	
 	return 0; // to be implemented
 }
 

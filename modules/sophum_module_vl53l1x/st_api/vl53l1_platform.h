@@ -7,6 +7,7 @@
 #define _VL53L1_PLATFORM_H_
 
 #include "vl53l1_types.h"
+#include "sophum_driver_i2c.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -14,7 +15,8 @@ extern "C"
 #endif
 
 typedef struct {
-	uint32_t dummy;
+	// uint32_t dummy;
+	uint8_t dev_addr;
 } VL53L1_Dev_t;
 typedef VL53L1_Dev_t *VL53L1_DEV;
 

@@ -7,7 +7,7 @@
 #include "freertos/task.h"
 #include "esp_timer.h"
 
-extern void SOPHUM_delayMs(int32_t nms);
-extern void SOPHUM_delayUs(int16_t nus);
+extern void SOPHUM_delayMs(uint32_t nms);
+extern void SOPHUM_delayUs(uint16_t nus);
 
 #endif

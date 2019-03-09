@@ -71,7 +71,7 @@ bool I2C_writeMultiBytes(uint8_t i2c_port, uint8_t dev_addr, uint8_t reg_addr, u
 
     if(ret != ESP_OK)
     {
-        printf("%u's %u register write ERROR!!!\n", dev_addr, reg_addr);
+        printf("%#X's %u register write ERROR!!!\n", dev_addr >> 1, reg_addr);
         return false;
     }
     else
@@ -138,7 +138,7 @@ bool I2C_readMultiBytes(uint8_t i2c_port, uint8_t dev_addr, uint8_t reg_addr, ui
 
     if(ret != ESP_OK)
     {
-        printf("%u's %u register read ERROR!!!\n", dev_addr, reg_addr);
+        printf("%#X's %u register read ERROR!!!\n", dev_addr >> 1, reg_addr);
         return false;
     }
     else

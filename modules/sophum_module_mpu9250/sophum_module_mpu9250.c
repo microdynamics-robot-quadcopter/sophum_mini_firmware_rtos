@@ -49,6 +49,12 @@ static bool    MPU9250_testConnection(void);
 
 static bool    MPU9250_getSelfTest(void);
 static bool    MPU9250_evaluateSelfTest(float low, float high, float value, char* string);
+static bool    MPU9250_caliGYROAndACCE(void);
+
+
+
+
+/* ===MPU9250 regitster operation API=== */
 
 /* MPU9250_SMPLRT_DIV register */
 static uint8_t MPU9250_getSampleRate(void);
@@ -272,8 +278,8 @@ static void     MPU9250_setFIFOByte(uint8_t data);
 
 
 
-/**
- * Get MPU9250 device ID
+/** Get MPU9250 device ID
+ *
  * @return TRUE if operation was successful, otherwise FALSE
  */
 static uint8_t MPU9250_getID(void)
@@ -295,8 +301,8 @@ static uint8_t MPU9250_getID(void)
 }
 
 
-/**
- * Verify the I2C connection
+/**  Verify the I2C connection
+ *
  * @return TRUE if connection was successful, otherwise FALSE
  */
 static bool MPU9250_testConnection(void)
@@ -305,8 +311,12 @@ static bool MPU9250_testConnection(void)
 }
 
 
-/**
- * Do a MPU9250 self test
+/** Do a MPU9250 self test
+ *
+ * accelerometer and gyroscope self test; check calibration wrt factory 
+ * settings. Should return percent deviation from factory trim values, 
+ * +/- 14 or less deviation is a pass.
+ *
  * @return TRUE if self test passed, otherwise FALSE
  */
 static bool MPU9250_getSelfTest(void)
@@ -329,11 +339,12 @@ static bool MPU9250_getSelfTest(void)
 
     /* write test config */
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SMPLRT_DIV, 0x00);    /* set gyro sample rate to 1 kHz */
-    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_CONFIG, 0x02);        /* set gyro sample rate to 1 kHz and DLPF to 92 Hz */
-    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 1<<FS);  /* set full scale range for the gyro to 250 dps */
-    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG2, 0x02); /* set accelerometer rate to 1 kHz and bandwidth to 92 Hz */
-    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 1<<FS); /* set full scale range for the accelerometer to 2 g */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_CONFIG, 0x02);        /* set gyro sample rate to 1 kHz and DLPF to 92Hz */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, FS<<3);  /* set full scale range for the gyro to 250dps */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG2, 0x02); /* set accelerometer rate to 1 kHz and bandwidth to 92Hz */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, FS<<3); /* set full scale range for the accelerometer to 2g */
 
+    /* get average current values of gyro and acclerometer */
     for(int i = 1; i <= 200; i++)
     {
         I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_XOUT_H, 6, raw_data);
@@ -347,6 +358,7 @@ static bool MPU9250_getSelfTest(void)
         aver_gyro_data[2] += (int16_t)(((int16_t)raw_data[4] << 8) | raw_data[5]);
     }
 
+    /* get average of 200 values and store as average current readings */
     for(int i = 0; i < 3; i++)
     {
         aver_acce_data[i] /= 200;
@@ -356,8 +368,9 @@ static bool MPU9250_getSelfTest(void)
     /* configure the acce and gyro for self-test */
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 0xE0); /* enable self test on all three axes and set acce range to +/- 2g */
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 0xE0);  /* enable self test on all three axes and set gyro range to +/- 250dps */
-    vTaskDelay(25); /* delay a while to let the device stabilize */
+    vTaskDelay(25 / portTICK_RATE_MS); /* delay a while to let the device stabilize */
 
+    /* get average self-test values of gyro and acclerometer */
     for(int i = 1; i <= 200; i++)
     {
         I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_XOUT_H, 6, raw_data);
@@ -371,6 +384,7 @@ static bool MPU9250_getSelfTest(void)
         aver_gyro_selftest_data[2] += (int16_t)(((int16_t)raw_data[4] << 8) | raw_data[5]);
     }
 
+    /* get average of 200 values and store as average self-test readings */
     for(int i = 0; i < 3; i++)
     {
         aver_acce_selftest_data[i] /= 200;
@@ -380,7 +394,7 @@ static bool MPU9250_getSelfTest(void)
     /* configure the gyro and accelerometer for normal operation */
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 0x00);
     I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 0x00);
-    vTaskDelay(25); /* delay a while to let the device stabilize */
+    vTaskDelay(25 / portTICK_RATE_MS); /* delay a while to let the device stabilize */
 
     /* retrieve acce and gyro factory Self-Test Code from USR_Reg */
     I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SELF_TEST_X_ACCEL, selftest_data);
@@ -433,8 +447,8 @@ static bool MPU9250_getSelfTest(void)
 }
 
 
-/**
- * Evaluate the values from a MPU9250 self test
+/** Evaluate the values from a MPU9250 self test
+ *
  * @param low   : The low limit of the self test
  * @param high  : The high limit of the self test
  * @param value : The value to compare with.
@@ -453,6 +467,186 @@ static bool MPU9250_evaluateSelfTest(float low, float high, float value, char* s
     return true;
 }
 
+
+/** Accumulates gyro and accelerometer data after device initialization
+ *
+ * It calculates the average of the at-rest readings and then loads the
+ * resulting offsets into accelerometer and gyro bias registers.
+ *
+ * @return TRUE if operatoin is success, otherwise FALSE
+ */
+static bool MPU9250_caliGYROAndACCE(void)
+{
+    uint8_t tmp_data[16];
+    uint16_t tmp_packet_count, tmp_fifo_count;
+    int32_t tmp_gyro_bias[3] = {0, 0, 0}, tmp_acce_bias[3] = {0, 0, 0};
+
+    /* reset device */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_1, 0x80);
+    vTaskDelay(100 / portTICK_RATE_MS);
+
+    /* get stable time source. Auto select clock source to be PLL gyroscope reference if ready  */
+    /* else use the internal oscillator, bits 2:0 = 001 */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_1, 0x01);
+
+    /* enable gyro and acce data output */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_2, 0x00);
+
+    vTaskDelay(200 / portTICK_RATE_MS);
+
+    /* configure device for bias calculation */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_INT_ENABLE, 0x00);   /* disable all interrupts */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_FIFO_EN, 0x00);      /* disable FIFO */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_1, 0x00);   /* turn on internal clock source */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_I2C_MST_CTRL, 0x00); /* disable I2C master */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_USER_CTRL, 0x00);    /* disable FIFO and I2C master modes */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_USER_CTRL, 0x0C);    /* reset FIFO and DMP */
+
+    vTaskDelay(15 / portTICK_RATE_MS);
+
+    /* configure gyro and accelerometer for bias calculation */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_CONFIG, 0x01);       /* set low-pass filter to 188Hz */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SMPLRT_DIV, 0x00);   /* set sample rate to 1kHz */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, 0x00);  /* set gyro full-scale to 250dps */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ACCEL_CONFIG, 0x00); /* set acce full-scale to 2g */
+
+    uint16_t gyro_sens = 131;   /* gyro sensitivity is 131LSB/deg/s */
+    uint16_t acce_sens = 16384; /* acce sensitivity is 16384LSB/g */
+
+    /* configure FIFO to capture accelerometer and gyro data for bias calculation */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_USER_CTRL, 0x40); /* enable FIFO */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_FIFO_EN, 0x78);   /* disable gyro and accelerometer sensors for FIFO */
+    vTaskDelay(40 / portTICK_RATE_MS);
+
+    /* at end of sample accumulation, turn off FIFO sensor read */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_FIFO_EN, 0x00);   /* enable gyro and accelerometer sensors for FIFO */    
+    I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_FIFO_COUNTH,
+                       2, tmp_data);                                                    /* read FIFO sample count */
+
+    tmp_fifo_count = (((uint16_t)tmp_data[0] << 8) | tmp_data[1]);
+    tmp_packet_count = tmp_fifo_count / 12; /* how many sets of full gyro and accelerometer data for averaging */
+
+    for(int i = 0; i < tmp_packet_count; i++)
+    {
+        int16_t tmp_acce[3] = {0, 0, 0}, tmp_gyro[3] = {0, 0, 0};
+        I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_FIFO_R_W,
+                           12, tmp_data);  /* read data for averaging */
+
+        /* form signed 16-bit integer for each sample in FIFO */
+        tmp_acce[0] = (int16_t)(((int16_t)tmp_data[0]  << 8) | tmp_data[1]);
+        tmp_acce[1] = (int16_t)(((int16_t)tmp_data[2]  << 8) | tmp_data[3]);
+        tmp_acce[2] = (int16_t)(((int16_t)tmp_data[4]  << 8) | tmp_data[5]);    
+        tmp_gyro[0] = (int16_t)(((int16_t)tmp_data[6]  << 8) | tmp_data[7]);
+        tmp_gyro[1] = (int16_t)(((int16_t)tmp_data[8]  << 8) | tmp_data[9]);
+        tmp_gyro[2] = (int16_t)(((int16_t)tmp_data[10] << 8) | tmp_data[11]);
+
+        /* sum individual signed 16-bit biases to get accumulated signed 32-bit biases */
+        tmp_acce_bias[0] += (int32_t)tmp_acce[0];
+        tmp_acce_bias[1] += (int32_t)tmp_acce[1];
+        tmp_acce_bias[2] += (int32_t)tmp_acce[2];
+        tmp_gyro_bias[0] += (int32_t)tmp_gyro[0];
+        tmp_gyro_bias[1] += (int32_t)tmp_gyro[1];
+        tmp_gyro_bias[2] += (int32_t)tmp_gyro[2];
+    }
+
+    /* normalize sums to get average count biases */
+    tmp_acce_bias[0] /= (int32_t)tmp_packet_count;
+    tmp_acce_bias[1] /= (int32_t)tmp_packet_count;
+    tmp_acce_bias[2] /= (int32_t)tmp_packet_count;
+    tmp_gyro_bias[0] /= (int32_t)tmp_packet_count;
+    tmp_gyro_bias[1] /= (int32_t)tmp_packet_count;
+    tmp_gyro_bias[2] /= (int32_t)tmp_packet_count;
+
+    if(tmp_acce_bias[2] > 0L)
+    {
+        tmp_acce_bias[2] -= (int32_t)acce_sens; /* remove gravity from the z-axis accelerometer bias calculation */
+    }
+    else
+    {
+        tmp_acce_bias[2] += (int32_t)acce_sens;
+    }
+
+    /* construct the gyro biases for push to the hardware gyro bias registers, which are reset to zero upon device startup */
+    tmp_data[0] = (-tmp_gyro_bias[0] / 4  >> 8) & 0xFF; /* divide by 4 to get 32.9 LSB per deg/s to conform to expected bias input format */
+    tmp_data[1] = (-tmp_gyro_bias[0] / 4)       & 0xFF; /* biases are additive, so change sign on calculated average gyro biases */
+    tmp_data[2] = (-tmp_gyro_bias[1] / 4  >> 8) & 0xFF;
+    tmp_data[3] = (-tmp_gyro_bias[1] / 4)       & 0xFF;
+    tmp_data[4] = (-tmp_gyro_bias[2] / 4  >> 8) & 0xFF;
+    tmp_data[5] = (-tmp_gyro_bias[2] / 4)       & 0xFF;
+
+    /* push gyro biases to hardware registers */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_XG_OFFSET_H, tmp_data[0]);
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_XG_OFFSET_L, tmp_data[1]);
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_YG_OFFSET_H, tmp_data[2]);
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_YG_OFFSET_L, tmp_data[3]);
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ZG_OFFSET_H, tmp_data[4]);
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ZG_OFFSET_L, tmp_data[5]);
+
+    for(int i = 0; i < 3; i++)
+    {
+        printf("gyro bias[%d]: %f\n", i, (float)tmp_gyro_bias[i] / (float)gyro_sens);
+    }
+    
+    /* construct the accelerometer biases for push to the hardware accelerometer bias registers. These registers contain */
+    /* factory trim values which must be added to the calculated accelerometer biases; on boot up these registers will hold */
+    /* non-zero values. In addition, bit 0 of the lower byte must be preserved since it is used for temperature */
+    /* compensation calculations. Accelerometer bias registers expect bias input as 2048 LSB per g, so that */
+    /* the accelerometer biases calculated above must be divided by 8. */
+    int32_t tmp_acce_bias_reg[3] = {0, 0, 0}; /* A place to hold the factory accelerometer trim biases */
+    I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_XA_OFFSET_H, 2, tmp_data);
+    tmp_acce_bias_reg[0] = (int32_t)(((int16_t)tmp_data[0] << 8) | tmp_data[1]);
+
+    I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_YA_OFFSET_H, 2, tmp_data);
+    tmp_acce_bias_reg[1] = (int32_t)(((int16_t)tmp_data[0] << 8) | tmp_data[1]);
+
+    I2C_readMultiBytes(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ZA_OFFSET_H, 2, tmp_data);
+    tmp_acce_bias_reg[2] = (int32_t)(((int16_t)tmp_data[0] << 8) | tmp_data[1]);
+
+    /* define mask for temperature compensation bit 0 of lower byte of accelerometer bias registers */
+    uint32_t tmp_mask = 1UL;
+    /* define array to hold mask bit for each accelerometer bias axis */
+    uint8_t tmp_mask_bit[3] = {0, 0, 0};
+
+    for(int i = 0; i < 3; i++)
+    {
+        if((tmp_acce_bias_reg[i] & tmp_mask))
+        {
+            tmp_mask_bit[i] = 0x01; /* if temperature compensation bit is set, record that fact in mask_bit */
+        }
+    }
+
+    /* construct total accelerometer bias, including calculated average accelerometer bias from above */
+    tmp_acce_bias_reg[0] -= (tmp_acce_bias[0] / 8); /* subtract calculated averaged accelerometer bias scaled to 2048 LSB/g (16 g full scale) */
+    tmp_acce_bias_reg[1] -= (tmp_acce_bias[1] / 8);
+    tmp_acce_bias_reg[2] -= (tmp_acce_bias[2] / 8);
+
+
+    tmp_data[0] = (tmp_acce_bias_reg[0] >> 8) & 0xFF;
+    tmp_data[1] = (tmp_acce_bias_reg[0])      & 0xFF;
+    tmp_data[1] = tmp_data[1] | tmp_mask_bit[0];  /* preserve temperature compensation bit when writing back to accelerometer bias registers */
+    tmp_data[2] = (tmp_acce_bias_reg[1] >> 8) & 0xFF;
+    tmp_data[3] = (tmp_acce_bias_reg[1])      & 0xFF;
+    tmp_data[3] = tmp_data[3] | tmp_mask_bit[1];  /* preserve temperature compensation bit when writing back to accelerometer bias registers */
+    tmp_data[4] = (tmp_acce_bias_reg[2] >> 8) & 0xFF;
+    tmp_data[5] = (tmp_acce_bias_reg[2])      & 0xFF;
+    tmp_data[5] = tmp_data[5] | tmp_mask_bit[2];  /* preserve temperature compensation bit when writing back to accelerometer bias registers */
+
+
+    /* apparently this is not working for the acceleration biases in the MPU-9250 */
+    /* are we handling the temperature correction bit properly? */
+    /* push accelerometer biases to hardware registers */
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_XA_OFFSET_H, tmp_data[0]);
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_XA_OFFSET_L, tmp_data[1]);
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_YA_OFFSET_H, tmp_data[2]);
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_YA_OFFSET_L, tmp_data[3]);
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ZA_OFFSET_H, tmp_data[4]);
+    // I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_ZA_OFFSET_L, tmp_data[5]);
+    for(int i = 0; i < 3; i++)
+    {
+        printf("acce bias[%d]: %f\n", i, (float)tmp_acce_bias[i] / (float)acce_sens);
+    }
+    return true;
+}
 
 /** Get the gyroscope output(sample rate) rate divider
  *
@@ -3188,9 +3382,56 @@ void MPU9250_Init(void)
     {
         printf("MPU9250 test connection SUCCESS!!!\n");
     }
+    else
+    {
+        printf("MPU9250 test connection ERROR!!!\n");
+        return;
+    }
 
     if(MPU9250_getSelfTest() == true)
     {
         printf("MPU9250 self test SUCCESS!!!\n");
     }
+    else
+    {
+        printf("MPU9250 self test ERROR!!!\n");
+        return;
+    }
+
+    vTaskDelay(1000 / portTICK_RATE_MS);
+
+    if(MPU9250_caliGYROAndACCE() == true)
+    {
+        printf("MPU9250 cali GYRO and ACCE offsets SUCCESS!!!\n");
+    }
+    else
+    {
+        printf("MPU9250 cali GYRO and ACCE offsets ERROR!!!\n");
+    }
+
+    /* wake up device */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_1, 0x00); /* clear sleep mode bit[6], enable all sensors */
+    vTaskDelay(100 / portTICK_RATE_MS); /* wait for all registers to reset */
+
+    /* get stable time source */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_PWR_MGMT_1, 0x01); /* auto select clock source to be PLL gyroscope reference if ready else */
+    vTaskDelay(200 / portTICK_RATE_MS);
+
+    /* configure Gyro and Thermometer */
+    /* disable FSYNC and set thermometer and gyro bandwidth to 41 and 42 Hz, respectively; */
+    /* minimum delay time for this setting is 5.9 ms, which means sensor fusion update rates cannot */
+    /* be higher than 1 / 0.0059 = 170Hz */
+    /* DLPF_CFG = bits 2:0 = 011; this limits the sample rate to 1000Hz for both */
+    /* With the MPU9250, it is possible to get gyro sample rates of 32kHz (!), 8kHz or 1kHz */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_CONFIG, 0x03);
+
+    /* set sample rate = gyroscope output rate/(1 + SMPLRT_DIV) */
+    /* use a 200 Hz rate; a rate consistent with the filter update rate */
+    I2C_writeOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_SMPLRT_DIV, 0x04);
+
+    /* set gyroscope full scale range [need to modify!!!]*/
+    /* range selects FS_SEL and GFS_SEL are 0-3, so 2-bit values are left-shifted into positions [4:3] */
+    uint8_t tmp_config;
+    I2C_readOneByte(I2C_NUM1_MASTER_PORT_GPIO, MPU9250_ADDR, MPU9250_GYRO_CONFIG, tmp_config);
+    tmp_config = &
 }

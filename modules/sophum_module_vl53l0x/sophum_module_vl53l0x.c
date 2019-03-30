@@ -97,7 +97,7 @@ VL53L0X_Error VL53L0X_Init(VL53L0X_Dev_t *pDevice)
     return status;
 }
 
-VL53L0X_Error Vl53L0x_doSingleMeasurement(VL53L0X_Dev_t *pDevice, VL53L0X_RangingMeasurementData_t *meas_data)
+VL53L0X_Error VL53L0X_doSingleMeasurement(VL53L0X_Dev_t *pDevice, VL53L0X_RangingMeasurementData_t *meas_data)
 {
     VL53L0X_Error status = VL53L0X_PerformSingleRangingMeasurement(pDevice, meas_data);
     VL53L0X_printError(status, "VL53L0X_PerformSingleRangingMeasurement");

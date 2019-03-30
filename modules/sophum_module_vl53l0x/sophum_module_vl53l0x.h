@@ -6,6 +6,6 @@
 #include "vl53l0x_platform.h"
 
 extern VL53L0X_Error VL53L0X_Init(VL53L0X_Dev_t *pDevice);
-extern VL53L0X_Error Vl53L0x_doSingleMeasurement(VL53L0X_Dev_t *pDevice, VL53L0X_RangingMeasurementData_t *meas_data);
+extern VL53L0X_Error VL53L0X_doSingleMeasurement(VL53L0X_Dev_t *pDevice, VL53L0X_RangingMeasurementData_t *meas_data);
 
 #endif

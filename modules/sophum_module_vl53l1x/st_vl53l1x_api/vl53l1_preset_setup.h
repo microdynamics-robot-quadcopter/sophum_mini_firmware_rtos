@@ -1,7 +1,8 @@
+
 /*
 * Copyright (c) 2017, STMicroelectronics - All Rights Reserved
 *
-* This file : part of VL53L1 Core and : dual licensed,
+* This file is part of VL53L1 Core and is dual licensed,
 * either 'STMicroelectronics
 * Proprietary license'
 * or 'BSD 3-clause "New" or "Revised" License' , at your option.
@@ -16,7 +17,7 @@
 * terms at www.st.com/sla0081
 *
 * STMicroelectronics confidential
-* Reproduction and Communication of this document : strictly prohibited unless
+* Reproduction and Communication of this document is strictly prohibited unless
 * specifically authorized in writing by STMicroelectronics.
 *
 *
@@ -59,35 +60,52 @@
 ********************************************************************************
 *
 */
-/**
- * @file  vl53l1x_calibration.h
- * @brief Calibration Functions definition
- */
 
-#ifndef _CALIBRATION_H_
-#define _CALIBRATION_H_
+#ifndef _VL53L1_PRESET_SETUP_H_
+#define _VL53L1_PRESET_SETUP_H_
 
-/**
- * @brief This function performs the offset calibration.\n
- * The function returns the offset value found and programs the offset compensation into the device.
- * @param TargetDistInMm target distance in mm, ST recommended 100 mm
- * Target reflectance = grey17%
- * @return 0:success, !=0: failed
- * @return offset pointer contains the offset found in mm
- */
-int8_t VL53L1X_CalibrateOffset(VL53L1_Dev_t dev, uint16_t TargetDistInMm, int16_t *offset);
-
-/**
- * @brief This function performs the xtalk calibration.\n
- * The function returns the xtalk value found and programs the xtalk compensation to the device
- * @param TargetDistInMm target distance in mm\n
- * The target distance : the distance where the sensor start to "under range"\n
- * due to the influence of the photons reflected back from the cover glass becoming strong\n
- * It's also called inflection point\n
- * Target reflectance = grey 17%
- * @return 0: success, !=0: failed
- * @return xtalk pointer contains the xtalk value found in cps (number of photons in count per second)
- */
-int8_t VL53L1X_CalibrateXtalk(VL53L1_Dev_t dev, uint16_t TargetDistInMm, uint16_t *xtalk);
-
+#ifdef __cplusplus
+extern "C"
+{
 #endif
+
+/* indexes for the bare driver tuning setting API function */
+enum VL53L1_Tuning_t {
+	VL53L1_TUNING_VERSION = 0,
+	VL53L1_TUNING_PROXY_MIN,
+	VL53L1_TUNING_SINGLE_TARGET_XTALK_TARGET_DISTANCE_MM,
+	VL53L1_TUNING_SINGLE_TARGET_XTALK_SAMPLE_NUMBER,
+	VL53L1_TUNING_MIN_AMBIENT_DMAX_VALID,
+	VL53L1_TUNING_MAX_SIMPLE_OFFSET_CALIBRATION_SAMPLE_NUMBER,
+	VL53L1_TUNING_XTALK_FULL_ROI_TARGET_DISTANCE_MM,
+	VL53L1_TUNING_SIMPLE_OFFSET_CALIBRATION_REPEAT,
+
+	VL53L1_TUNING_MAX_TUNABLE_KEY
+};
+
+/* default values for the tuning settings parameters */
+#define TUNING_VERSION	0x0004
+
+#define TUNING_PROXY_MIN -30 /* min distance in mm */
+#define TUNING_SINGLE_TARGET_XTALK_TARGET_DISTANCE_MM 600
+/* Target distance in mm for single target Xtalk */
+#define TUNING_SINGLE_TARGET_XTALK_SAMPLE_NUMBER 50
+/* Number of sample used for single target Xtalk */
+#define TUNING_MIN_AMBIENT_DMAX_VALID 8
+/* Minimum ambient level to state the Dmax returned by the device is valid */
+#define TUNING_MAX_SIMPLE_OFFSET_CALIBRATION_SAMPLE_NUMBER 50
+/* Maximum loops to perform simple offset calibration */
+#define TUNING_XTALK_FULL_ROI_TARGET_DISTANCE_MM 600
+/* Target distance in mm for target Xtalk from Bins method*/
+#define TUNING_SIMPLE_OFFSET_CALIBRATION_REPEAT 1
+/* Number of loops done during the simple offset calibration*/
+
+/* the following table should actually be defined as static and shall be part
+ * of the VL53L1_StaticInit() function code
+ */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _VL53L1_PRESET_SETUP_H_ */

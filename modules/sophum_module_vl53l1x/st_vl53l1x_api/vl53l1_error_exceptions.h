@@ -1,4 +1,3 @@
-
 /*
 * Copyright (c) 2017, STMicroelectronics - All Rights Reserved
 *
@@ -61,111 +60,34 @@
 *
 */
 
-#ifndef _VL53L1_PLATFORM_H_
-#define _VL53L1_PLATFORM_H_
+/**
+ * @file  vl53l1_error_exceptions.h
+ *
+ * @brief EwokPlus25 LL Driver definitions for control of error handling in LL driver
+ */
 
-#include "vl53l1_ll_def.h"
-#include "vl53l1_platform_log.h"
+#ifndef _VL53L1_ERROR_EXCEPTIONS_H_
+#define _VL53L1_ERROR_EXCEPTIONS_H_
 
-#define VL53L1_IPP_API
-#include "vl53l1_platform_user_data.h"
+#define IGNORE_DIVISION_BY_ZERO                                0
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#define IGNORE_XTALK_EXTRACTION_NO_SAMPLE_FAIL                 0
+#define IGNORE_XTALK_EXTRACTION_SIGMA_LIMIT_FAIL               0
+#define IGNORE_XTALK_EXTRACTION_NO_SAMPLE_FOR_GRADIENT_WARN    0
+#define IGNORE_XTALK_EXTRACTION_SIGMA_LIMIT_FOR_GRADIENT_WARN  0
+#define IGNORE_XTALK_EXTRACTION_MISSING_SAMPLES_WARN           0
 
-VL53L1_Error VL53L1_CommsInitialise(
-	VL53L1_Dev_t *pdev,
-	uint8_t       comms_type,
-	uint16_t      comms_speed_khz);
+#define IGNORE_REF_SPAD_CHAR_NOT_ENOUGH_SPADS                  0
+#define IGNORE_REF_SPAD_CHAR_RATE_TOO_HIGH                     0
+#define IGNORE_REF_SPAD_CHAR_RATE_TOO_LOW                      0
 
-VL53L1_Error VL53L1_CommsClose(
-	VL53L1_Dev_t *pdev);
+#define IGNORE_OFFSET_CAL_MISSING_SAMPLES                      0
+#define IGNORE_OFFSET_CAL_SIGMA_TOO_HIGH                       0
+#define IGNORE_OFFSET_CAL_RATE_TOO_HIGH                        0
+#define IGNORE_OFFSET_CAL_SPAD_COUNT_TOO_LOW				   0
 
-VL53L1_Error VL53L1_WriteMulti(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata,
-		uint32_t      count);
+#define IGNORE_ZONE_CAL_MISSING_SAMPLES                        0
+#define IGNORE_ZONE_CAL_SIGMA_TOO_HIGH                         0
+#define IGNORE_ZONE_CAL_RATE_TOO_HIGH                          0
 
-VL53L1_Error VL53L1_ReadMulti(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata,
-		uint32_t      count);
-
-VL53L1_Error VL53L1_WrByte(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t       VL53L1_PRM_00005);
-
-VL53L1_Error VL53L1_WrWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint16_t      VL53L1_PRM_00005);
-
-VL53L1_Error VL53L1_WrDWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint32_t      VL53L1_PRM_00005);
-
-VL53L1_Error VL53L1_RdByte(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata);
-
-VL53L1_Error VL53L1_RdWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint16_t     *pdata);
-
-VL53L1_Error VL53L1_RdDWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint32_t     *pdata);
-
-VL53L1_Error VL53L1_WaitUs(
-		VL53L1_Dev_t *pdev,
-		int32_t       wait_us);
-
-VL53L1_Error VL53L1_WaitMs(
-		VL53L1_Dev_t *pdev,
-		int32_t       wait_ms);
-
-VL53L1_Error VL53L1_GetTimerFrequency(int32_t *ptimer_freq_hz);
-
-VL53L1_Error VL53L1_GetTimerValue(int32_t *ptimer_count);
-
-VL53L1_Error VL53L1_GpioSetMode(uint8_t pin, uint8_t mode);
-
-VL53L1_Error VL53L1_GpioSetValue(uint8_t pin, uint8_t value);
-
-VL53L1_Error VL53L1_GpioGetValue(uint8_t pin, uint8_t *pvalue);
-
-VL53L1_Error VL53L1_GpioXshutdown(uint8_t value);
-
-VL53L1_Error VL53L1_GpioCommsSelect(uint8_t value);
-
-VL53L1_Error VL53L1_GpioPowerEnable(uint8_t value);
-
-VL53L1_Error  VL53L1_GpioInterruptEnable(void (*function)(void), uint8_t edge_type);
-
-VL53L1_Error  VL53L1_GpioInterruptDisable(void);
-
-VL53L1_Error VL53L1_GetTickCount(
-	uint32_t *ptime_ms);
-
-VL53L1_Error VL53L1_WaitValueMaskEx(
-		VL53L1_Dev_t *pdev,
-		uint32_t      timeout_ms,
-		uint16_t      index,
-		uint8_t       value,
-		uint8_t       mask,
-		uint32_t      poll_delay_ms);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* _VL53L1_ERROR_EXCEPTIONS_H_ */

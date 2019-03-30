@@ -1,4 +1,3 @@
-
 /*
 * Copyright (c) 2017, STMicroelectronics - All Rights Reserved
 *
@@ -61,111 +60,87 @@
 *
 */
 
-#ifndef _VL53L1_PLATFORM_H_
-#define _VL53L1_PLATFORM_H_
+/**
+ * @file  vl53l1_silicon_core.c
+ *
+ * @brief EwokPlus25 low level silicon LL Driver function definition
+ */
+
 
 #include "vl53l1_ll_def.h"
-#include "vl53l1_platform_log.h"
+#include "vl53l1_platform.h"
+#include "vl53l1_register_map.h"
+#include "vl53l1_core.h"
+#include "vl53l1_silicon_core.h"
 
-#define VL53L1_IPP_API
-#include "vl53l1_platform_user_data.h"
 
-#ifdef __cplusplus
-extern "C"
+#define LOG_FUNCTION_START(fmt, ...) \
+	_LOG_FUNCTION_START(VL53L1_TRACE_MODULE_CORE, fmt, ##__VA_ARGS__)
+#define LOG_FUNCTION_END(status, ...) \
+	_LOG_FUNCTION_END(VL53L1_TRACE_MODULE_CORE, status, ##__VA_ARGS__)
+#define LOG_FUNCTION_END_FMT(status, fmt, ...) \
+	_LOG_FUNCTION_END_FMT(VL53L1_TRACE_MODULE_CORE, status, fmt, ##__VA_ARGS__)
+
+
+VL53L1_Error VL53L1_is_firmware_ready_silicon(
+	VL53L1_DEV     Dev,
+	uint8_t       *pready)
 {
-#endif
+	/**
+	 * Determines if the firmware is ready to range
+	 *
+	 * There are 2 different behaviors depending on whether
+	 * power force is enabled or not
+	 */
 
-VL53L1_Error VL53L1_CommsInitialise(
-	VL53L1_Dev_t *pdev,
-	uint8_t       comms_type,
-	uint16_t      comms_speed_khz);
+	VL53L1_Error status = VL53L1_ERROR_NONE;
+	VL53L1_LLDriverData_t *pdev = VL53L1DevStructGetLLDriverHandle(Dev);
 
-VL53L1_Error VL53L1_CommsClose(
-	VL53L1_Dev_t *pdev);
+	uint8_t  comms_buffer[5];
 
-VL53L1_Error VL53L1_WriteMulti(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata,
-		uint32_t      count);
+	LOG_FUNCTION_START("");
 
-VL53L1_Error VL53L1_ReadMulti(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata,
-		uint32_t      count);
+	/* read interrupt and power force reset status */
 
-VL53L1_Error VL53L1_WrByte(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t       VL53L1_PRM_00005);
+	status = VL53L1_ReadMulti(
+					Dev,
+					VL53L1_INTERRUPT_MANAGER__ENABLES,
+					comms_buffer,
+					5);
 
-VL53L1_Error VL53L1_WrWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint16_t      VL53L1_PRM_00005);
+	if (status == VL53L1_ERROR_NONE) {
 
-VL53L1_Error VL53L1_WrDWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint32_t      VL53L1_PRM_00005);
+		pdev->dbg_results.interrupt_manager__enables =
+				comms_buffer[0];
+		pdev->dbg_results.interrupt_manager__clear =
+				comms_buffer[1];
+		pdev->dbg_results.interrupt_manager__status =
+				comms_buffer[2];
+		pdev->dbg_results.mcu_to_host_bank__wr_access_en =
+				comms_buffer[3];
+		pdev->dbg_results.power_management__go1_reset_status =
+				comms_buffer[4];
 
-VL53L1_Error VL53L1_RdByte(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint8_t      *pdata);
+		if ((pdev->sys_ctrl.power_management__go1_power_force & 0x01) == 0x01) {
 
-VL53L1_Error VL53L1_RdWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint16_t     *pdata);
+				if (((pdev->dbg_results.interrupt_manager__enables & 0x1F) == 0x1F) &&
+					((pdev->dbg_results.interrupt_manager__clear   & 0x1F) == 0x1F))
+					*pready = 0x01;
+				else
+					*pready = 0x00;
 
-VL53L1_Error VL53L1_RdDWord(
-		VL53L1_Dev_t *pdev,
-		uint16_t      index,
-		uint32_t     *pdata);
+		} else {
 
-VL53L1_Error VL53L1_WaitUs(
-		VL53L1_Dev_t *pdev,
-		int32_t       wait_us);
+			/* set ready flag if bit 0 is zero i.g G01 is in reset */
+			if ((pdev->dbg_results.power_management__go1_reset_status & 0x01) == 0x00)
+				*pready = 0x01;
+			else
+				*pready = 0x00;
+		}
 
-VL53L1_Error VL53L1_WaitMs(
-		VL53L1_Dev_t *pdev,
-		int32_t       wait_ms);
+	}
 
-VL53L1_Error VL53L1_GetTimerFrequency(int32_t *ptimer_freq_hz);
+	LOG_FUNCTION_END(status);
 
-VL53L1_Error VL53L1_GetTimerValue(int32_t *ptimer_count);
-
-VL53L1_Error VL53L1_GpioSetMode(uint8_t pin, uint8_t mode);
-
-VL53L1_Error VL53L1_GpioSetValue(uint8_t pin, uint8_t value);
-
-VL53L1_Error VL53L1_GpioGetValue(uint8_t pin, uint8_t *pvalue);
-
-VL53L1_Error VL53L1_GpioXshutdown(uint8_t value);
-
-VL53L1_Error VL53L1_GpioCommsSelect(uint8_t value);
-
-VL53L1_Error VL53L1_GpioPowerEnable(uint8_t value);
-
-VL53L1_Error  VL53L1_GpioInterruptEnable(void (*function)(void), uint8_t edge_type);
-
-VL53L1_Error  VL53L1_GpioInterruptDisable(void);
-
-VL53L1_Error VL53L1_GetTickCount(
-	uint32_t *ptime_ms);
-
-VL53L1_Error VL53L1_WaitValueMaskEx(
-		VL53L1_Dev_t *pdev,
-		uint32_t      timeout_ms,
-		uint16_t      index,
-		uint8_t       value,
-		uint8_t       mask,
-		uint32_t      poll_delay_ms);
-
-#ifdef __cplusplus
+	return status;
 }
-#endif
-
-#endif

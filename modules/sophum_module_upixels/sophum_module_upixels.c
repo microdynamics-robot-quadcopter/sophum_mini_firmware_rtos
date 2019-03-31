@@ -188,6 +188,7 @@ void UPIXELS_Init(void)
     recv_len = uart_read_bytes(UART_NUM_1, recv, UART1_BUFF_SIZE, 1000 / portTICK_RATE_MS);
     if(((recv[0]^recv[1]) == recv[2]) & (recv[1] == 0x00))
     {
+        printf("recv[0]: %#X recv[1]: %#X recv[2]: %#X\n", recv[0], recv[1], recv[2]);
         printf("UPIXELS AB cmd config SUCCESS\n");
 
         for(int i = 0; i < config_tab_len; i += 2)
@@ -203,6 +204,7 @@ void UPIXELS_Init(void)
         recv_len = uart_read_bytes(UART_NUM_1, recv, UART1_BUFF_SIZE, 1000 / portTICK_RATE_MS);
         if(((recv[0]^recv[1]) == recv[2]) & (recv[1] == 0x00))
         {
+            printf("recv[0]: %#X recv[1]: %#X recv[2]: %#X\n", recv[0], recv[1], recv[2]);
             printf("UPIXELS BB cmd config SUCCESS\n");
             uart_write_bytes(UART_NUM_1, (const char *) (config_cmd_head + 3), 1);
             printf("UPIXELS all config SUCCESS\n");
@@ -220,5 +222,27 @@ void UPIXELS_Init(void)
 
 void UPIXELS_updateData(void)
 {
-    
+    uint8_t recv[666] = {0}, recv_len;
+    recv_len = uart_read_bytes(UART_NUM_1, recv, 666, 1000 / portTICK_RATE_MS);
+    printf("recv_len is %d\n", recv_len);
+
+    for(int i = 0; i < recv_len; i++)
+    {
+        printf("data recv: %#X\n", recv[i]);
+    }
+
+    for(int i = 0; i <= 14; i++)
+    {
+        if(recv[i] == 0xFE && recv[i+1] == 0x0A && recv[i+13] == 0x55)
+        {
+            int16_t flow_x_integral = (int16_t)(recv[i+3]<<8) | recv[i+2];
+            int16_t flow_y_integral = (int16_t)(recv[i+5]<<8) | recv[i+4];
+            int16_t integral_timesp = (int16_t)(recv[i+7]<<8) | recv[i+6];
+            int16_t xor             = recv[i+12];
+            printf("flow_x_integral: %d\n", flow_x_integral);
+            printf("flow_y_integral: %d\n", flow_y_integral);
+            printf("integral_timesp: %d\n", integral_timesp);
+            printf("xor:             %d\n", xor);
+        }
+    }
 }

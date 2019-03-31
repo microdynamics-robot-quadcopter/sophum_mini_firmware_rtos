@@ -31,4 +31,3 @@ int8_t BNO055_writeMultiBytes(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_d
         return BNO055_ERROR;
     }
 }
-

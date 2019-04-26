@@ -7,8 +7,8 @@
 #include "sophum_driver_spi.h"
 #include "sophum_driver_sys.h"
 
-#define PMW3901_CS_PIN        GPIO_NUM_33
-#define PMW3901_CS_PIN_MASK   GPIO_SEL_33
+#define PMW3901_CS_PIN        GPIO_NUM_14
+#define PMW3901_CS_PIN_MASK   GPIO_SEL_14
 
 
 extern bool PMW3901_Init(void);

@@ -11,11 +11,11 @@ static uint8_t PMW3901_readRegister(uint8_t reg_addr)
 {
     uint8_t tmp_data = 0x00;
     gpio_set_level(PMW3901_CS_PIN, 0);
-    SOPHUM_delayUs(50);
+    SOPHUM_delayUs(60);
     SPI_readOneByte(pmw3901_dev, reg_addr, &tmp_data);
-    SOPHUM_delayUs(200);
+    SOPHUM_delayUs(250);
     gpio_set_level(PMW3901_CS_PIN, 1);
-    SOPHUM_delayUs(200);
+    SOPHUM_delayUs(250);
 
     return tmp_data;
 }
@@ -23,11 +23,11 @@ static uint8_t PMW3901_readRegister(uint8_t reg_addr)
 static void PMW3901_writeRegister(uint8_t reg_addr, uint8_t value)
 {
     gpio_set_level(PMW3901_CS_PIN, 0);
-    SOPHUM_delayUs(50);
+    SOPHUM_delayUs(60);
     SPI_writeOneByte(pmw3901_dev, reg_addr, value);
-    SOPHUM_delayUs(50);
+    SOPHUM_delayUs(60);
     gpio_set_level(PMW3901_CS_PIN, 1);
-    SOPHUM_delayUs(200);
+    SOPHUM_delayUs(250);
 }
 
 static void PMW3901_initRegister(void)
@@ -123,15 +123,15 @@ bool PMW3901_Init(void)
 
     /* make sure the SPI BUS is reset */
     gpio_set_level(PMW3901_CS_PIN, 1);
-    SOPHUM_delayMs(1);
+    SOPHUM_delayUs(1100);
     gpio_set_level(PMW3901_CS_PIN, 0);
-    SOPHUM_delayMs(1);
+    SOPHUM_delayUs(1100);
     gpio_set_level(PMW3901_CS_PIN, 1);
-    SOPHUM_delayMs(1);
+    SOPHUM_delayUs(1100);
 
     /* power on reset */
     PMW3901_writeRegister(0x3A, 0x5A);
-    SOPHUM_delayMs(5);
+    SOPHUM_delayUs(5100);
 
     /* test the SPI communciation, check chip ID and inverse chip ID */
     uint8_t pmw3901_id = PMW3901_readRegister(0x00);
@@ -151,7 +151,7 @@ bool PMW3901_Init(void)
     PMW3901_readRegister(0x05);
     PMW3901_readRegister(0x06);
 
-    SOPHUM_delayMs(1);
+    SOPHUM_delayUs(1100);
     PMW3901_initRegister();
 
     return true;

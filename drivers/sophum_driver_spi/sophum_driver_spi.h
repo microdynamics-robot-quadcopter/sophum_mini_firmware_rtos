@@ -5,8 +5,8 @@
 #include "esp_err.h"
 
 /* SPI opeartion macro */
-#define SPIBUS_READ                  (0x80)  /* addr | SPIBUS_READ  */
-#define SPIBUS_WRITE                 (0x7F)  /* addr & SPIBUS_WRITE */
+#define SPIBUS_READ                  (0x7F)  /* addr & SPIBUS_READ  */
+#define SPIBUS_WRITE                 (0x80)  /* addr | SPIBUS_WRITE */
 
 #define SPI_HSPI_MASTER_MOSI_GPIO     25
 #define SPI_HSPI_MASTER_MISO_GPIO     26

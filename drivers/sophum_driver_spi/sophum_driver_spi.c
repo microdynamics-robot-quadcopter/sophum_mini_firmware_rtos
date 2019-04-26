@@ -29,7 +29,7 @@ esp_err_t SPI_addDevice(uint8_t spi_port, uint8_t mode, uint32_t clock_speed_hz,
     dev_conf.cs_ena_pretrans  = 0;    /* 0 not used */
     dev_conf.cs_ena_posttrans = 0;    /* 0 not used */
     dev_conf.clock_speed_hz   = clock_speed_hz;
-    dev_conf.spics_io_num     = cs_io_num;
+    dev_conf.spics_io_num     = -1;   /* not used */
     dev_conf.flags            = 0;    /* 0 not used */
     dev_conf.queue_size       = 1;
     dev_conf.pre_cb           = NULL;
@@ -79,7 +79,8 @@ esp_err_t SPI_writeMultiBytes(spi_device_handle_t handle, uint8_t reg_addr, size
     spi_transaction_t transaction;
     transaction.flags     = 0;
     transaction.cmd       = 0;
-    transaction.addr      = reg_addr & SPIBUS_WRITE;
+    transaction.addr      = reg_addr | SPIBUS_WRITE;
+    // transaction.addr      = reg_addr | 0x80u;
     transaction.length    = bit_len * 8;
     transaction.rxlength  = 0;
     transaction.user      = NULL;
@@ -125,7 +126,8 @@ esp_err_t SPI_readMultiBytes(spi_device_handle_t handle, uint8_t reg_addr, size_
     spi_transaction_t transaction;
     transaction.flags     = 0;
     transaction.cmd       = 0;
-    transaction.addr      = reg_addr | SPIBUS_READ;
+    transaction.addr      = reg_addr & SPIBUS_READ;
+    // transaction.addr      = reg_addr & (~0x80u);
     transaction.length    = bit_len * 8;
     transaction.rxlength  = bit_len * 8;
     transaction.user      = NULL;

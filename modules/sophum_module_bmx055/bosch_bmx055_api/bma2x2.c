@@ -84,7 +84,7 @@
 /*! user defined code to be added here ... */
 static struct bma2x2_t *p_bma2x2;
 /*! Based on Bit resolution value_u8 should be modified */
-u8 V_BMA2x2RESOLUTION_U8 = BMA2x2_14_RESOLUTION;
+u8 V_BMA2x2RESOLUTION_U8 = BMA2x2_12_RESOLUTION;
 
 /****************************************************************************/
 /*!	Static Function Declarations

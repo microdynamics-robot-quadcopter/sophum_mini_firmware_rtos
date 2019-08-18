@@ -1,0 +1,4 @@
+#ifndef __SOPHUM_ALGORITHM_FILTER_H__
+#define __SOPHUM_ALGORITHM_FILTER_H__
+
+#endif

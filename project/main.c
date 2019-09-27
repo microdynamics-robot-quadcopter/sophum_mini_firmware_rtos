@@ -19,39 +19,108 @@
 #include "sophum_module_pmw3901.h"
 // #include "sophum_module_vl53l0x.h"
 #include "sophum_module_vl53l1x.h"
+#include "sophum_module_lps22hb.h"
 
 
-static xQueueHandle gpio_evt_queue = NULL;
+// static xQueueHandle gpio_evt_queue = NULL;
 
-void IRAM_ATTR gpio_isr_handler(void *arg)
-{
-    uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
-}
+// void IRAM_ATTR gpio_isr_handler(void *arg)
+// {
+//     uint32_t gpio_num = (uint32_t) arg;
+//     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+// }
 
-void gpio_task(void *arg)
-{
-    printf("\r\n into gpio neg edge check task\r\n");
-    uint32_t io_num;
+// void gpio_task(void *arg)
+// {
+//     printf("\r\n into gpio neg edge check task\r\n");
+//     uint32_t io_num;
 
-    while(1)
-    {
-        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
-        {
-            printf("GPIO_%d get neg edge interrupt!!! current state: %d\n", io_num, gpio_get_level(io_num));
-        }
-    }
-}
+//     while(1)
+//     {
+//         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+//         {
+//             printf("GPIO_%d get neg edge interrupt!!! current state: %d\n", io_num, gpio_get_level(io_num));
+//         }
+//     }
+// }
 
 
 // static VL53L0X_Dev_t vl53l0x_dev;
 // static VL53L1_Dev_t  vl53l1x_dev;
-extern spi_device_handle_t pmw3901_dev;
+// extern spi_device_handle_t pmw3901_dev;
 
-uint8_t tmp_data;
+// uint8_t tmp_data;
+// typedef union{
+//   int16_t i16bit;
+//   uint8_t u8bit[2];
+// } axis1bit16_t;
+
+// typedef union{
+//   int32_t i32bit;
+//   uint8_t u8bit[4];
+// } axis1bit32_t;
+
+// static stmdev_ctx_t dev_ctx;
+// static axis1bit32_t data_raw_pressure;
+// static axis1bit16_t data_raw_temperature;
+// static float pressure_hPa;
+// static float temperature_degC;
+static uint8_t whoamI, rst;
+// static uint8_t tx_buffer[1000];
+
 
 void app_main()
 {
+    I2C_MasterInit(I2C_NUM_0, I2C_NUM0_MASTER_SCL_GPIO, I2C_NUM0_MASTER_SDA_GPIO,
+                   I2C_NUM0_MASTER_FREQ_HZ);
+
+    // dev_ctx.write_reg = LPS22HB_Write;
+    // dev_ctx.read_reg = LPS22HB_Read;
+
+    printf("I am maskyki\n");
+    while(1)
+    {
+        // lps22hb_device_id_get(&dev_ctx, &whoamI);
+        // B8U 0FU
+        // 0xD4U 0x0FU
+        I2C_readOneByte(I2C_NUM_0, 0x3C,  0x4F, &whoamI);
+        if(whoamI == LPS22HB_ID)
+        {
+            printf("the LPS22HB ID is %0X\n", whoamI);
+        }
+        else if(whoamI == 0x6A)
+        {
+            printf("the LSM6DSM ID is %0X\n", whoamI);
+        }
+        else if(whoamI == 0x40)
+        {
+            printf("the LIS2MDL ID is %0X\n", whoamI);
+        }
+        else
+        {
+            printf("wait...\n");
+        }
+    }
+    
+
+    // vTaskDelay(5000 / portTICK_PERIOD_MS);
+    // ESC_Init(PWM_TYPE_STANDARD);
+    // ESC_updateOutput(PWM_TYPE_STANDARD, 1500, 1500, 1500, 1500);
+    // ESC_txTask(PWM_TYPE_STANDARD);
+    // vTaskDelay(1500 / portTICK_PERIOD_MS);
+    // while(1);
+
+    // int tmp_val = 1450, op = 50;
+    // while(1)
+    // {
+    //     if(tmp_val >= 1650) op = -op;
+    //     if(tmp_val <= 1400) op = -op;
+    //     tmp_val += op;
+    //     ESC_updateOutput(PWM_TYPE_STANDARD, tmp_val, tmp_val, tmp_val, tmp_val);
+    //     ESC_txTask(PWM_TYPE_STANDARD);
+    //     vTaskDelay(1500 / portTICK_PERIOD_MS);
+    // }
+
     /*===================gpio interrupt func test start===========================*/
 /*    gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_NEGEDGE;
@@ -93,54 +162,54 @@ void app_main()
 
     
     
-    SPI_MasterInit(SPI_HSPI_MASTER_PORT_GPIO, SPI_HSPI_MASTER_MOSI_GPIO, SPI_HSPI_MASTER_MISO_GPIO,
-                   SPI_HSPI_MASTER_SCK_GPIO, 4094);
-    SPI_addDevice(SPI_HSPI_MASTER_PORT_GPIO, SPI_MASTER_MODE_3, SPI_HSPI_MASTER_CLK_SPEED, PMW3901_CS_PIN,
-                 &pmw3901_dev);
+    // SPI_MasterInit(SPI_HSPI_MASTER_PORT_GPIO, SPI_HSPI_MASTER_MOSI_GPIO, SPI_HSPI_MASTER_MISO_GPIO,
+    //                SPI_HSPI_MASTER_SCK_GPIO, 4094);
+    // SPI_addDevice(SPI_HSPI_MASTER_PORT_GPIO, SPI_MASTER_MODE_3, SPI_HSPI_MASTER_CLK_SPEED, PMW3901_CS_PIN,
+    //              &pmw3901_dev);
 
-    while(1)
-    {
-        if(PMW3901_Init() == true)
-        {
-            int16_t pmw_datax = 0, pmw_datay = 0;
-            SOPHUM_delayMs(1000);
-            while(1)
-            {
-                PMW3901_readMotionCount(&pmw_datax, &pmw_datay);
-                printf("X: %d Y: %d\n", pmw_datax, pmw_datay);
-                SOPHUM_delayMs(100);
-            }
-        }
-    }
-    if(PMW3901_Init() == true)
-    {
-        int16_t pmw_datax = 0, pmw_datay = 0;
-        while(1)
-        {
-            PMW3901_readMotionCount(&pmw_datax, &pmw_datay);
-            printf("X: %u Y: %u\n", pmw_datax, pmw_datay);
-        }
-    }
-    else
-    {   
-        printf("pmw3901 init is error!\n");
-        while(1);
-    }
+    // while(1)
+    // {
+    //     if(PMW3901_Init() == true)
+    //     {
+    //         int16_t pmw_datax = 0, pmw_datay = 0;
+    //         SOPHUM_delayMs(1000);
+    //         while(1)
+    //         {
+    //             PMW3901_readMotionCount(&pmw_datax, &pmw_datay);
+    //             printf("X: %d Y: %d\n", pmw_datax, pmw_datay);
+    //             SOPHUM_delayMs(100);
+    //         }
+    //     }
+    // }
+    // if(PMW3901_Init() == true)
+    // {
+    //     int16_t pmw_datax = 0, pmw_datay = 0;
+    //     while(1)
+    //     {
+    //         PMW3901_readMotionCount(&pmw_datax, &pmw_datay);
+    //         printf("X: %u Y: %u\n", pmw_datax, pmw_datay);
+    //     }
+    // }
+    // else
+    // {   
+    //     printf("pmw3901 init is error!\n");
+    //     while(1);
+    // }
     
 
-    UART1_Init(UART1_BAUD_RATE, UART1_DATA_BITS, UART1_PARITY_EN, UART1_STOP_BITS, UART1_FLOW_CTRL_EN);
-    char uart_test[] = "maksyuki";
-    uint8_t recv[66];
-    int recv_len;
-    int len = sizeof(uart_test);
-    while(1)
-    {
-        uart_write_bytes(UART_NUM_1, (const char *) uart_test, len);
-        recv_len = uart_read_bytes(UART_NUM_1, recv, UART1_BUFF_SIZE, 1000 / portTICK_RATE_MS);
-        for(int i = 0; i < recv_len; i++) printf("%c", recv[i]);
-        printf("\n");
-        SOPHUM_delayMs(1000);
-    }
+    // UART1_Init(UART1_BAUD_RATE, UART1_DATA_BITS, UART1_PARITY_EN, UART1_STOP_BITS, UART1_FLOW_CTRL_EN);
+    // char uart_test[] = "maksyuki";
+    // uint8_t recv[66];
+    // int recv_len;
+    // int len = sizeof(uart_test);
+    // while(1)
+    // {
+    //     uart_write_bytes(UART_NUM_1, (const char *) uart_test, len);
+    //     recv_len = uart_read_bytes(UART_NUM_1, recv, UART1_BUFF_SIZE, 1000 / portTICK_RATE_MS);
+    //     for(int i = 0; i < recv_len; i++) printf("%c", recv[i]);
+    //     printf("\n");
+    //     SOPHUM_delayMs(1000);
+    // }
     
     // UPIXELS_Init();
     // SOPHUM_delayMs(1000);
@@ -173,8 +242,8 @@ void app_main()
     // ESC_txTask(PWM_TYPE_STANDARD);
     // while(1);
 
-    I2C_MasterInit(I2C_NUM1_MASTER_PORT_GPIO, I2C_NUM1_MASTER_SCL_GPIO, I2C_NUM1_MASTER_SDA_GPIO,
-                   I2C_NUM1_MASTER_FREQ_HZ);
+    // I2C_MasterInit(I2C_NUM1_MASTER_PORT_GPIO, I2C_NUM1_MASTER_SCL_GPIO, I2C_NUM1_MASTER_SDA_GPIO,
+    //                I2C_NUM1_MASTER_FREQ_HZ);
 
     /* right */
     // STORE_Init();
